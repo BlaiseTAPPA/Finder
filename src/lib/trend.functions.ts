@@ -18,7 +18,7 @@ export interface HistoryResult {
 
 /** Verlaufspunkte für das Diagramm (7/14/30 Tage). */
 export const getPriceHistory = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => historyInputSchema.parse(input))
+  .validator((input: unknown) => historyInputSchema.parse(input))
   .handler(async ({ data }): Promise<HistoryResult> => {
     const { readHistory } = await import("./price-history.server");
     const points = await readHistory(data.stationId, data.fuelType, data.days);
@@ -33,7 +33,7 @@ export const getPriceHistory = createServerFn({ method: "POST" })
 
 /** Trend, Klassifizierung und Empfehlung (alles serverseitig berechnet). */
 export const getPriceTrend = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => trendInputSchema.parse(input))
+  .validator((input: unknown) => trendInputSchema.parse(input))
   .handler(async ({ data }): Promise<TrendResult> => {
     const { readHistory } = await import("./price-history.server");
     const { computeTrend } = await import("./trend");
@@ -60,7 +60,7 @@ export interface TrendSummary {
 
 /** Trend-Badges für die gesamte Ergebnisliste in einer einzigen Abfrage. */
 export const getTrendSummaries = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => summariesInputSchema.parse(input))
+  .validator((input: unknown) => summariesInputSchema.parse(input))
   .handler(async ({ data }): Promise<TrendSummary[]> => {
     const { readHistoryBulk } = await import("./price-history.server");
     const { computeTrend } = await import("./trend");

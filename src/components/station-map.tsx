@@ -129,8 +129,9 @@ export default function StationMap({
       {/* Zoom-Buttons unten rechts, außerhalb der Daumenzone am unteren Rand. */}
       <ZoomControl position="bottomright" />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       {line.length > 1 ? (
         <RouteSync line={routeLine!} />
