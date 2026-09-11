@@ -27,7 +27,6 @@ function readCache<T>(key: string): T | null {
 }
 
 function writeCache(key: string, value: unknown, ttlMs: number) {
-  // Cache klein halten (Worker-Speicher).
   if (cache.size > 200) cache.clear();
   cache.set(key, { value, expires: Date.now() + ttlMs });
 }
@@ -41,23 +40,35 @@ export class TankerkoenigError extends Error {
   }
 }
 
-function apiKey(): string {
-  const key = process.env["TANKERKOENIG_API_KEY"];
+function apiKey(): string | null {
+  // Supporte à la fois TANKERKOENIG_API_KEY et VITE_TANKERKOENIG_API_KEY
+  const key = process.env["TANKERKOENIG_API_KEY"] || process.env["VITE_TANKERKOENIG_API_KEY"];
   if (!key) {
-    throw new TankerkoenigError(
-      "missing-key",
-      "Kein Tankerkönig-API-Schlüssel hinterlegt.",
-    );
+    console.warn("[Tankerkönig Server] ⚠️ Aucun clé API trouvée dans les variables d'environnement.");
+    return null;
   }
   return key;
 }
 
-async function request(url: string): Promise<unknown> {
+/** Requête HTTP sécurisée avec Timeout de 5s pour éviter tout blocage du SSR */
+async function request(url: string, timeoutMs = 5000): Promise<unknown> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   let res: Response;
   try {
-    res = await fetch(url, { headers: { Accept: "application/json" } });
-  } catch {
+    res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+  } catch (err: any) {
+    clearTimeout(timer);
+    if (err?.name === "AbortError") {
+      throw new TankerkoenigError("network", "Délai d'attente dépassé (Timeout) vers Tankerkönig.");
+    }
     throw new TankerkoenigError("network", "Tankerkönig ist nicht erreichbar.");
+  } finally {
+    clearTimeout(timer);
   }
 
   if (res.status === 429 || res.status === 503) {
@@ -73,7 +84,6 @@ async function request(url: string): Promise<unknown> {
   const json = (await res.json()) as { ok?: boolean; message?: string };
   if (json && json.ok === false) {
     const msg = json.message ?? "Unbekannter Fehler";
-    // Tankerkönig meldet Limitüberschreitungen als ok:false mit Textmeldung.
     if (/limit|quota|too many|apikey/i.test(msg)) {
       throw new TankerkoenigError(
         /apikey/i.test(msg) ? "missing-key" : "quota",
@@ -89,13 +99,17 @@ async function request(url: string): Promise<unknown> {
 
 /**
  * Stationen im Umkreis.
- * Cache-Key auf ~1 km Raster gerundet, TTL 5 Minuten.
  */
 export async function fetchStations(input: {
   lat: number;
   lng: number;
   radius: number;
 }): Promise<Station[]> {
+  const key_api = apiKey();
+  if (!key_api) {
+    return []; // Renvoie un tableau vide plutôt que de faire crasher le SSR
+  }
+
   const gridLat = input.lat.toFixed(2);
   const gridLng = input.lng.toFixed(2);
   const key = `list:${gridLat}:${gridLng}:${input.radius}`;
@@ -103,21 +117,31 @@ export async function fetchStations(input: {
   const cached = readCache<Station[]>(key);
   if (cached) return cached;
 
-  const url = `${BASE}/list.php?lat=${input.lat}&lng=${input.lng}&rad=${input.radius}&sort=dist&type=all&apikey=${apiKey()}`;
-  const parsed = listResponseSchema.parse(await request(url));
-  const stations = (parsed.stations ?? []).map(normalizeStation);
+  try {
+    const url = `${BASE}/list.php?lat=${input.lat}&lng=${input.lng}&rad=${input.radius}&sort=dist&type=all&apikey=${key_api}`;
+    const raw = await request(url);
+    const parsed = listResponseSchema.parse(raw);
+    const stations = (parsed.stations ?? []).map(normalizeStation);
 
-  writeCache(key, stations, 5 * 60 * 1000);
-  return stations;
+    writeCache(key, stations, 5 * 60 * 1000);
+    return stations;
+  } catch (error) {
+    console.error("[Tankerkönig Server] Échec de récupération des stations :", error);
+    return [];
+  }
 }
 
 /**
- * Aktualisierte Preise für bereits geladene Stationen (Polling).
- * TTL 3 Minuten, ein einziger Aufruf für alle IDs.
+ * Aktualisierte Preise für bereits geladene Stationen.
  */
 export async function fetchPrices(
   ids: string[],
 ): Promise<Record<string, { isOpen: boolean; prices: FuelPrices }>> {
+  const key_api = apiKey();
+  if (!key_api || ids.length === 0) {
+    return {};
+  }
+
   const sorted = [...ids].sort();
   const key = `prices:${sorted.join(",")}`;
 
@@ -125,16 +149,22 @@ export async function fetchPrices(
     readCache<Record<string, { isOpen: boolean; prices: FuelPrices }>>(key);
   if (cached) return cached;
 
-  const url = `${BASE}/prices.php?ids=${sorted.join(",")}&apikey=${apiKey()}`;
-  const parsed = pricesResponseSchema.parse(await request(url));
+  try {
+    const url = `${BASE}/prices.php?ids=${sorted.join(",")}&apikey=${key_api}`;
+    const raw = await request(url);
+    const parsed = pricesResponseSchema.parse(raw);
 
-  const result: Record<string, { isOpen: boolean; prices: FuelPrices }> = {};
-  for (const [id, entry] of Object.entries(parsed.prices ?? {})) {
-    result[id] = normalizePrices(entry);
+    const result: Record<string, { isOpen: boolean; prices: FuelPrices }> = {};
+    for (const [id, entry] of Object.entries(parsed.prices ?? {})) {
+      result[id] = normalizePrices(entry);
+    }
+
+    writeCache(key, result, 3 * 60 * 1000);
+    return result;
+  } catch (error) {
+    console.error("[Tankerkönig Server] Échec de récupération des prix :", error);
+    return {};
   }
-
-  writeCache(key, result, 3 * 60 * 1000);
-  return result;
 }
 
 /** Geocoding über Nominatim (Ort oder PLZ), auf Deutschland beschränkt. */
@@ -145,22 +175,27 @@ export async function geocode(
   const cached = readCache<{ lat: number; lng: number; label: string } | null>(key);
   if (cached !== null) return cached;
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000); // 4s timeout
+
   const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=de&q=${encodeURIComponent(query)}`;
   let res: Response;
   try {
     res = await fetch(url, {
       headers: {
-        // Nominatim verlangt einen aussagekräftigen User-Agent.
         "User-Agent": "Tankstellen-Finder (Lovable app)",
         Accept: "application/json",
       },
+      signal: controller.signal,
     });
   } catch {
-    throw new TankerkoenigError("network", "Ortssuche nicht erreichbar.");
+    clearTimeout(timer);
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
-  if (!res.ok) {
-    throw new TankerkoenigError("upstream", "Ortssuche fehlgeschlagen.");
-  }
+
+  if (!res.ok) return null;
 
   const json = (await res.json()) as Array<{
     lat: string;
@@ -176,7 +211,6 @@ export async function geocode(
       }
     : null;
 
-  // 24h Cache: Ortskoordinaten ändern sich nicht.
   writeCache(key, value, 24 * 60 * 60 * 1000);
   return value;
 }

@@ -28,60 +28,61 @@ export type GeocodeResult =
 
 /** Stationen im Umkreis (Proxy auf list.php, serverseitig gecacht). */
 export const listStations = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => listInputSchema.parse(input))
+  .validator((input: unknown) => listInputSchema.parse(input))
   .handler(async ({ data }): Promise<ListResult> => {
-    const { fetchStations, TankerkoenigError } = await import(
-      "./tankerkoenig.server"
-    );
     try {
-      const stations = await fetchStations(data);
-      // Gesehene Stationen registrieren – Grundlage für die Preishistorie.
-      try {
-        const { upsertSeenStations } = await import("./price-history.server");
-        await upsertSeenStations(stations);
-      } catch (error) {
-        console.error("upsertSeenStations failed", error);
-      }
-      return { ok: true, stations, fetchedAt: Date.now() };
+      const { fetchStations, TankerkoenigError } = await import(
+        "./tankerkoenig.server"
+      );
 
-    } catch (error) {
-      if (error instanceof TankerkoenigError) {
+      const stations = await fetchStations(data);
+
+      // Enregistrement asynchrone non-bloquant pour la base de données
+      if (stations.length > 0) {
+        import("./price-history.server")
+          .then(({ upsertSeenStations }) => upsertSeenStations(stations))
+          .catch((err) => console.warn("[DB] Enregistrement d'historique ignoré :", err?.message || err));
+      }
+
+      return { ok: true, stations, fetchedAt: Date.now() };
+    } catch (error: any) {
+      if (error?.name === "TankerkoenigError" || error?.kind) {
         return { ok: false, error: { kind: error.kind, message: error.message } };
       }
-      console.error("listStations failed", error);
+      console.error("[listStations] Échec de l'appel :", error);
       return {
         ok: false,
-        error: { kind: "upstream", message: "Daten konnten nicht geladen werden." },
+        error: { kind: "upstream", message: "Données temporairement indisponibles." },
       };
     }
   });
 
 /** Preis-Aktualisierung für bereits geladene Stationen (Proxy auf prices.php). */
 export const refreshPrices = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => pricesInputSchema.parse(input))
+  .validator((input: unknown) => pricesInputSchema.parse(input))
   .handler(async ({ data }): Promise<PricesResult> => {
-    const { fetchPrices, TankerkoenigError } = await import("./tankerkoenig.server");
     try {
+      const { fetchPrices } = await import("./tankerkoenig.server");
       const updates = await fetchPrices(data.ids);
       return { ok: true, updates, fetchedAt: Date.now() };
-    } catch (error) {
-      if (error instanceof TankerkoenigError) {
+    } catch (error: any) {
+      if (error?.name === "TankerkoenigError" || error?.kind) {
         return { ok: false, error: { kind: error.kind, message: error.message } };
       }
-      console.error("refreshPrices failed", error);
+      console.error("[refreshPrices] Échec de l'appel :", error);
       return {
         ok: false,
-        error: { kind: "upstream", message: "Preise konnten nicht aktualisiert werden." },
+        error: { kind: "upstream", message: "Impossible de mettre à jour les prix." },
       };
     }
   });
 
 /** Ort oder PLZ in Koordinaten auflösen (Nominatim). */
 export const geocodePlace = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => geocodeInputSchema.parse(input))
+  .validator((input: unknown) => geocodeInputSchema.parse(input))
   .handler(async ({ data }): Promise<GeocodeResult> => {
-    const { geocode, TankerkoenigError } = await import("./tankerkoenig.server");
     try {
+      const { geocode } = await import("./tankerkoenig.server");
       const hit = await geocode(data.query);
       if (!hit) {
         return {
@@ -90,11 +91,11 @@ export const geocodePlace = createServerFn({ method: "POST" })
         };
       }
       return { ok: true, ...hit };
-    } catch (error) {
-      if (error instanceof TankerkoenigError) {
+    } catch (error: any) {
+      if (error?.name === "TankerkoenigError" || error?.kind) {
         return { ok: false, error: { kind: error.kind, message: error.message } };
       }
-      console.error("geocodePlace failed", error);
+      console.error("[geocodePlace] Échec du géocodage :", error);
       return {
         ok: false,
         error: { kind: "upstream", message: "Ortssuche fehlgeschlagen." },

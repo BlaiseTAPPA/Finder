@@ -14,7 +14,10 @@ import type { SavedTrip, Station } from "@/types/station";
 
 /** Öffentlicher Clerk-Schlüssel (Publishable Key) für den Browser. */
 export const getClerkPublishableKey = createServerFn({ method: "GET" }).handler(
-  async (): Promise<string | null> => process.env["CLERK_PUBLISHABLE_KEY"] ?? null,
+  async (): Promise<string | null> => {
+    const env = (typeof process !== "undefined" ? process.env : {}) as Record<string, string | undefined>;
+    return env["CLERK_PUBLISHABLE_KEY"] ?? null;
+  },
 );
 
 export interface AccountData {
@@ -48,7 +51,7 @@ export const getAccount = createServerFn({ method: "GET" })
 /** Einmalige Übernahme lokaler Daten nach der Anmeldung. */
 export const syncLocalData = createServerFn({ method: "POST" })
   .middleware([requireClerkAuth])
-  .inputValidator((input: unknown) => syncSchema.parse(input))
+  .validator((input: unknown) => syncSchema.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { addFavorite, addTrip, upsertProfile } = await import("./account.server");
     await upsertProfile(context.clerkUserId, data.username ?? null, data.avatarUrl ?? null);
@@ -63,7 +66,7 @@ export const syncLocalData = createServerFn({ method: "POST" })
 
 export const setFavorite = createServerFn({ method: "POST" })
   .middleware([requireClerkAuth])
-  .inputValidator((input: unknown) => setFavoriteSchema.parse(input))
+  .validator((input: unknown) => setFavoriteSchema.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { addFavorite, removeFavorite } = await import("./account.server");
     if (data.favorite) {
@@ -76,7 +79,7 @@ export const setFavorite = createServerFn({ method: "POST" })
 
 export const saveTripForUser = createServerFn({ method: "POST" })
   .middleware([requireClerkAuth])
-  .inputValidator((input: unknown) => saveTripSchema.parse(input))
+  .validator((input: unknown) => saveTripSchema.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { addTrip } = await import("./account.server");
     await addTrip(context.clerkUserId, data.trip as unknown as SavedTrip);
@@ -85,7 +88,7 @@ export const saveTripForUser = createServerFn({ method: "POST" })
 
 export const deleteTripForUser = createServerFn({ method: "POST" })
   .middleware([requireClerkAuth])
-  .inputValidator((input: unknown) => idSchema.parse(input))
+  .validator((input: unknown) => idSchema.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { removeTrip } = await import("./account.server");
     await removeTrip(context.clerkUserId, data.id);
@@ -94,7 +97,7 @@ export const deleteTripForUser = createServerFn({ method: "POST" })
 
 export const saveAlert = createServerFn({ method: "POST" })
   .middleware([requireClerkAuth])
-  .inputValidator((input: unknown) => upsertAlertSchema.parse(input))
+  .validator((input: unknown) => upsertAlertSchema.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { upsertAlert } = await import("./account.server");
     await upsertAlert(context.clerkUserId, data);
@@ -103,7 +106,7 @@ export const saveAlert = createServerFn({ method: "POST" })
 
 export const toggleAlert = createServerFn({ method: "POST" })
   .middleware([requireClerkAuth])
-  .inputValidator((input: unknown) => toggleAlertSchema.parse(input))
+  .validator((input: unknown) => toggleAlertSchema.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { setAlertActive } = await import("./account.server");
     await setAlertActive(context.clerkUserId, data.id, data.active);

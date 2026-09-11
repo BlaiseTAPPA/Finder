@@ -39,7 +39,7 @@ function toError(error: unknown, fallback: string): ApiErrorShape {
 
 /** POST /api/route – Route zwischen zwei Punkten (gecacht). */
 export const planRoute = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => planRouteInputSchema.parse(input))
+  .validator((input: unknown) => planRouteInputSchema.parse(input))
   .handler(async ({ data }): Promise<PlanRouteResult> => {
     const { planRouteServer } = await import("./route.server");
     try {
@@ -51,7 +51,7 @@ export const planRoute = createServerFn({ method: "POST" })
 
 /** GET-Äquivalent zu /api/route/stations – Stationen im Korridor mit Umweg. */
 export const routeStations = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => routeStationsInputSchema.parse(input))
+  .validator((input: unknown) => routeStationsInputSchema.parse(input))
   .handler(async ({ data }): Promise<RouteStationsResult> => {
     const { planRouteServer, collectRouteStations } = await import("./route.server");
     try {
@@ -77,7 +77,7 @@ export const routeStations = createServerFn({ method: "POST" })
 
 /** Autocomplete für Adressen (Nominatim, auf Deutschland begrenzt). */
 export const suggestPlaces = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => suggestInputSchema.parse(input))
+  .validator((input: unknown) => suggestInputSchema.parse(input))
   .handler(async ({ data }): Promise<PlaceSuggestion[]> => {
     const { searchPlaces } = await import("./nominatim.server");
     try {

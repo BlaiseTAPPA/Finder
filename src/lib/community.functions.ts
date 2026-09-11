@@ -14,7 +14,7 @@ import type { CommunityStatus } from "./community";
 
 /** Preis melden (keine Nähe-Pflicht, aber Rate-Limit). */
 export const reportPrice = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => reportInputSchema.parse(input))
+  .validator((input: unknown) => reportInputSchema.parse(input))
   .handler(async ({ data }): Promise<ContributionResult> => {
     const { RATE_LIMITS, coarsen, containsBlockedWords } = await import("./community");
     const { actedRecently, insertReport, overDailyLimit } = await import(
@@ -60,7 +60,7 @@ export const reportPrice = createServerFn({ method: "POST" })
 
 /** Preis bestätigen (nur in ~500 m Umkreis der Station). */
 export const confirmPrice = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => confirmInputSchema.parse(input))
+  .validator((input: unknown) => confirmInputSchema.parse(input))
   .handler(async ({ data }): Promise<ContributionResult> => {
     const { RATE_LIMITS, coarsen, isNearStation } = await import("./community");
     const { actedRecently, insertConfirmation, overDailyLimit, stationCoords } =
@@ -103,7 +103,7 @@ export const confirmPrice = createServerFn({ method: "POST" })
 
 /** Community-Status einer einzelnen Station. */
 export const getCommunityStatus = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => statusInputSchema.parse(input))
+  .validator((input: unknown) => statusInputSchema.parse(input))
   .handler(async ({ data }): Promise<CommunityStatus> => {
     const { buildStatus } = await import("./community");
     const { readActivity } = await import("./community.server");
@@ -118,7 +118,7 @@ export const getCommunityStatus = createServerFn({ method: "POST" })
 
 /** Community-Status für die sichtbare Liste (zwei Abfragen statt N). */
 export const getCommunityStatuses = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => statusesInputSchema.parse(input))
+  .validator((input: unknown) => statusesInputSchema.parse(input))
   .handler(async ({ data }): Promise<CommunityStatus[]> => {
     const { buildStatus } = await import("./community");
     const { readActivity } = await import("./community.server");
