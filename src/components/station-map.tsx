@@ -54,10 +54,9 @@ function RouteSync({ line }: { line: Coords[] }) {
   const map = useMap();
   useEffect(() => {
     if (line.length < 2) return;
-    map.fitBounds(
-      L.latLngBounds(line.map((p) => [p.lat, p.lng] as [number, number])),
-      { padding: [28, 28] },
-    );
+    map.fitBounds(L.latLngBounds(line.map((p) => [p.lat, p.lng] as [number, number])), {
+      padding: [28, 28],
+    });
   }, [map, line]);
   return null;
 }
@@ -152,10 +151,7 @@ export default function StationMap({
               lineCap: "round",
             }}
           />
-          <Polyline
-            positions={line}
-            pathOptions={{ color: "#0066cc", opacity: 0.9, weight: 4 }}
-          />
+          <Polyline positions={line} pathOptions={{ color: "#0066cc", opacity: 0.9, weight: 4 }} />
         </>
       )}
 

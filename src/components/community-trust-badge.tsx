@@ -3,12 +3,7 @@
  * Der angezeigte Preis stammt weiterhin ausschließlich von Tankerkönig.
  */
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { CommunityStatus } from "@/lib/community";
 
@@ -21,11 +16,7 @@ export function relativeTime(iso: string | null): string {
   return `vor ${hours} Std.`;
 }
 
-export function CommunityTrustBadge({
-  status,
-}: {
-  status: CommunityStatus | undefined;
-}) {
+export function CommunityTrustBadge({ status }: { status: CommunityStatus | undefined }) {
   if (!status || status.status === "neutral") return null;
   const confirmed = status.status === "confirmed";
 
@@ -40,20 +31,18 @@ export function CommunityTrustBadge({
               confirmed ? "bg-success/12 text-success" : "bg-destructive/10 text-destructive",
             )}
           >
-
             {confirmed ? "✓ Kürzlich bestätigt" : "⚠️ Preis angezweifelt"}
           </Badge>
         </TooltipTrigger>
         <TooltipContent className="max-w-64 text-xs">
           <p>
-            {status.confirmationsCount} Bestätigung(en) und {status.reportsCount}{" "}
-            Meldung(en) in den letzten 48 Stunden
-            {status.lastActivityAt ? `, zuletzt ${relativeTime(status.lastActivityAt)}` : ""}
-            .
+            {status.confirmationsCount} Bestätigung(en) und {status.reportsCount} Meldung(en) in den
+            letzten 48 Stunden
+            {status.lastActivityAt ? `, zuletzt ${relativeTime(status.lastActivityAt)}` : ""}.
           </p>
           <p className="mt-1 text-muted-foreground">
-            Community-Hinweis. Der Preis selbst stammt von Tankerkönig (offizielle
-            Meldung der Station) und wird dadurch nicht verändert.
+            Community-Hinweis. Der Preis selbst stammt von Tankerkönig (offizielle Meldung der
+            Station) und wird dadurch nicht verändert.
           </p>
         </TooltipContent>
       </Tooltip>

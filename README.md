@@ -33,17 +33,20 @@ npm run dev
 Live-Spritpreise (Tankerkönig) mit Umkreissuche, Karte und Favoriten.
 
 ### Einrichtung
+
 1. Kostenlosen API-Key auf https://creativecommons.tankerkoenig.de/ beantragen.
 2. `TANKERKOENIG_API_KEY` als Secret hinterlegen (siehe `.env.example`).
 3. Abhängigkeiten: `bun install` (Leaflet/react-leaflet sind enthalten).
 
 ### Aufbau
+
 - `src/lib/stations.functions.ts` – Server-Funktionen als Proxy (Key bleibt serverseitig)
 - `src/lib/tankerkoenig.server.ts` – HTTP + TTL-Cache + Quota-Fehler
 - `src/lib/tankerkoenig.ts` – Zod-Schemas/Normalisierung
 - `src/components/*` – Karte, Liste, Filter, Slider, Zustände
 
 ### Quota
+
 Tankerkönig ist nur für nicht-kommerzielle Nutzung freigegeben und drosselt häufige Abfragen.
 Deshalb: `list.php` serverseitig 5 Min gecacht (Cache-Key auf ~1 km Raster gerundet),
 `prices.php` 3 Min, Client-Polling alle 5 Min und nur für sichtbare Stationen,
@@ -70,6 +73,7 @@ nur den aktuellen Preis liefert.
   Dialog mit Verlaufsdiagramm (7/14/30 Tage inkl. Durchschnittslinie).
 
 ### Kompromisse
+
 20 Minuten Takt bildet den typischen Tagesverlauf ab (Preise ändern sich real ca. 4–8×/Tag)
 und bleibt deutlich unter dem Tankerkönig-Limit; differenzielles Schreiben begrenzt das
 Volumen auf ~300 Zeilen pro Station und Monat, die 30-Tage-Verdichtung deckelt das Wachstum.

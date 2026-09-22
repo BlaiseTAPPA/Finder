@@ -13,9 +13,7 @@ export function haversineKm(a: Coords, b: Coords): number {
   const dLng = toRad(b.lng - a.lng);
   const lat1 = toRad(a.lat);
   const lat2 = toRad(b.lat);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
@@ -63,10 +61,7 @@ export interface PolylineDistance {
 }
 
 /** Minimale Entfernung eines Punkts zu einer Polylinie. */
-export function distanceToPolylineKm(
-  point: Coords,
-  polyline: Coords[],
-): PolylineDistance {
+export function distanceToPolylineKm(point: Coords, polyline: Coords[]): PolylineDistance {
   if (polyline.length === 0) return { km: Number.POSITIVE_INFINITY, segmentIndex: -1 };
   if (polyline.length === 1) {
     return { km: haversineKm(point, polyline[0]!), segmentIndex: 0 };

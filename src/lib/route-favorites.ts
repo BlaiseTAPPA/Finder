@@ -54,10 +54,7 @@ export function useTripFavorites() {
     [persist],
   );
 
-  const remove = useCallback(
-    (id: string) => persist(read().filter((t) => t.id !== id)),
-    [persist],
-  );
+  const remove = useCallback((id: string) => persist(read().filter((t) => t.id !== id)), [persist]);
 
   return { trips, hydrated, save, remove };
 }

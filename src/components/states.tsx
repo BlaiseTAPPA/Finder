@@ -8,10 +8,7 @@ export function StationSkeletons({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, index) => (
-        <Card
-          key={index}
-          className="gap-0 rounded-lg border-hairline p-4 shadow-none sm:p-5"
-        >
+        <Card key={index} className="gap-0 rounded-lg border-hairline p-4 shadow-none sm:p-5">
           <Skeleton className="h-5 w-2/5" />
           <Skeleton className="mt-2 h-4 w-3/5" />
           <Skeleton className="mt-4 h-6 w-24 rounded-full" />

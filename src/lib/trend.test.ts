@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  classify,
-  computeTrend,
-  hourlyPattern,
-  percentileOf,
-  type HistoryPoint,
-} from "./trend";
+import { classify, computeTrend, hourlyPattern, percentileOf, type HistoryPoint } from "./trend";
 import { diffRows } from "./price-history.server";
 
 /** Baut synthetische Punkte: `days` Tage, ein Wert je Stunde. */

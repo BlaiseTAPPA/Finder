@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/server-fn-client";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -100,9 +100,8 @@ export function ReportPriceDialog({
         <DialogHeader>
           <DialogTitle>Preis melden</DialogTitle>
           <DialogDescription>
-            {station?.name} · Der angezeigte Preis stammt von Tankerkönig (offizielle
-            Meldung der Station). Deine Meldung ergänzt ihn nur als Community-Hinweis
-            und ändert ihn nicht.
+            {station?.name} · Der angezeigte Preis stammt von Tankerkönig (offizielle Meldung der
+            Station). Deine Meldung ergänzt ihn nur als Community-Hinweis und ändert ihn nicht.
           </DialogDescription>
         </DialogHeader>
 
@@ -147,8 +146,8 @@ export function ReportPriceDialog({
           </div>
 
           <p className="text-fine text-muted-foreground">
-            Bleibt die Abweichung bestehen, wende dich bitte direkt an die Tankstelle
-            oder melde sie über die offiziellen Kanäle der{" "}
+            Bleibt die Abweichung bestehen, wende dich bitte direkt an die Tankstelle oder melde sie
+            über die offiziellen Kanäle der{" "}
             <a
               href="https://www.bundeskartellamt.de/DE/Aufgaben/Markttransparenzstelle/MTS-Kraftstoffe/mtskraftstoffe_node.html"
               target="_blank"

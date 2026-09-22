@@ -27,10 +27,7 @@ function writeCache(key: string, value: unknown, ttlMs: number) {
 const round = (value: number) => value.toFixed(4);
 
 /** Route berechnen; identische Endpunkte liefern eine Stunde lang das Cache-Ergebnis. */
-export async function planRouteServer(
-  origin: Coords,
-  destination: Coords,
-): Promise<RouteInfo> {
+export async function planRouteServer(origin: Coords, destination: Coords): Promise<RouteInfo> {
   const key = `route:${round(origin.lat)},${round(origin.lng)}->${round(destination.lat)},${round(destination.lng)}`;
   const cached = readCache<RouteInfo>(key);
   if (cached) return cached;
@@ -73,9 +70,7 @@ export async function collectRouteStations(
 
   const unique = new Map<string, Station>();
   const results = await Promise.allSettled(
-    probes.map((point) =>
-      fetchStations({ lat: point.lat, lng: point.lng, radius: searchRadius }),
-    ),
+    probes.map((point) => fetchStations({ lat: point.lat, lng: point.lng, radius: searchRadius })),
   );
   for (const result of results) {
     if (result.status !== "fulfilled") continue;
@@ -91,10 +86,7 @@ export async function collectRouteStations(
 
   const inCorridor: Array<{ station: Station; corridorKm: number }> = [];
   for (const station of unique.values()) {
-    const { km } = distanceToPolylineKm(
-      { lat: station.lat, lng: station.lng },
-      route.polyline,
-    );
+    const { km } = distanceToPolylineKm({ lat: station.lat, lng: station.lng }, route.polyline);
     if (km <= corridorKm) inCorridor.push({ station, corridorKm: km });
   }
 

@@ -2,8 +2,8 @@
  * Hauptseite: Suche, Ergebnisliste, Karte und Favoriten.
  * Alle Tankerkönig-Aufrufe laufen über Server-Funktionen (API-Schlüssel bleibt serverseitig).
  */
-import { ClientOnly, createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
+import { ClientOnly } from "@/components/ClientOnly";
+import { useServerFn } from "@/lib/server-fn-client";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Route as RouteIcon, Save, SlidersHorizontal, Star } from "lucide-react";
@@ -30,12 +30,7 @@ import { ResultsLayout } from "@/components/results-layout";
 import { SiteHeader, type MainTab } from "@/components/site-header";
 import { cn } from "@/lib/utils";
 
-import {
-  EmptyState,
-  ErrorState,
-  StartState,
-  StationSkeletons,
-} from "@/components/states";
+import { EmptyState, ErrorState, StartState, StationSkeletons } from "@/components/states";
 import { useFavorites } from "@/lib/favorites";
 import { useTripFavorites } from "@/lib/route-favorites";
 import { useGeolocation } from "@/lib/geolocation";
@@ -59,36 +54,11 @@ import type {
 
 const StationMap = lazy(() => import("@/components/station-map"));
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Tankstellen-Finder — Spritpreise in Deutschland vergleichen" },
-      {
-        name: "description",
-        content:
-          "Finde Tankstellen in deiner Nähe und vergleiche Live-Preise für Super E5, E10 und Diesel. Karte, Umkreissuche und Favoriten.",
-      },
-      {
-        property: "og:title",
-        content: "Tankstellen-Finder — Spritpreise in Deutschland vergleichen",
-      },
-      {
-        property: "og:description",
-        content:
-          "Live-Spritpreise aus der Tankerkönig-Datenbank: Umkreissuche, Karte, günstigste Station auf einen Blick.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: HomePage,
-});
-
 function MapSkeleton() {
   return <Skeleton className="h-full w-full rounded-lg" />;
 }
 
-function HomePage() {
+export function HomePage() {
   const [center, setCenter] = useState<Coords | null>(null);
   const [placeLabel, setPlaceLabel] = useState<string | null>(null);
   const [radius, setRadius] = useState(5);
@@ -200,9 +170,7 @@ function HomePage() {
   const error: ApiErrorShape | null =
     geoError ??
     (listQuery.data && !listQuery.data.ok ? listQuery.data.error : null) ??
-    (listQuery.isError
-      ? { kind: "network", message: "Verbindung fehlgeschlagen." }
-      : null);
+    (listQuery.isError ? { kind: "network", message: "Verbindung fehlgeschlagen." } : null);
 
   const [searching, setSearching] = useState(false);
   const handleSearch = useCallback(
@@ -239,9 +207,7 @@ function HomePage() {
       callTrends({
         data: {
           fuelType: fuel,
-          stations: stations
-            .slice(0, 60)
-            .map((s) => ({ id: s.id, current: s.prices[fuel] })),
+          stations: stations.slice(0, 60).map((s) => ({ id: s.id, current: s.prices[fuel] })),
         },
       }),
   });
@@ -252,10 +218,7 @@ function HomePage() {
   }, [trendsQuery.data]);
 
   // Community-Status der sichtbaren Stationen (ergänzt den Tankerkönig-Preis).
-  const communityIds = useMemo(
-    () => stations.slice(0, 60).map((s) => s.id),
-    [stations],
-  );
+  const communityIds = useMemo(() => stations.slice(0, 60).map((s) => s.id), [stations]);
   const communityQuery = useQuery({
     queryKey: ["community", fuel, communityIds],
     enabled: communityIds.length > 0,
@@ -278,10 +241,7 @@ function HomePage() {
     [contributorId, geo.coords, communityQuery],
   );
 
-  const cheapestId = useMemo(
-    () => cheapestStationId(stations, fuel),
-    [stations, fuel],
-  );
+  const cheapestId = useMemo(() => cheapestStationId(stations, fuel), [stations, fuel]);
 
   const showSkeleton = listQuery.isLoading && center !== null;
 
@@ -344,10 +304,7 @@ function HomePage() {
     const max = Math.max(...prices);
     for (const station of routeStationList) {
       const price = station.prices[fuel];
-      map.set(
-        station.id,
-        typeof price === "number" && max > min ? (price - min) / (max - min) : 0,
-      );
+      map.set(station.id, typeof price === "number" && max > min ? (price - min) / (max - min) : 0);
     }
     return map;
   }, [routeStationList, fuel]);
@@ -372,11 +329,7 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader
-        tab={tab}
-        onTab={setTab}
-        favoritesCount={favorites.favorites.length}
-      />
+      <SiteHeader tab={tab} onTab={setTab} favoritesCount={favorites.favorites.length} />
 
       {/* Hero + Suche */}
       <section className="bg-parchment">
@@ -396,9 +349,7 @@ function HomePage() {
               searching={searching}
               locating={geo.status === "loading"}
             />
-            {geo.error && (
-              <p className="text-fine mt-2 text-muted-foreground">{geo.error}</p>
-            )}
+            {geo.error && <p className="text-fine mt-2 text-muted-foreground">{geo.error}</p>}
           </div>
         </div>
       </section>
@@ -453,11 +404,7 @@ function HomePage() {
               )}
             >
               <div>
-                <RadiusSlider
-                  value={radius}
-                  onChange={setRadius}
-                  onCommit={setCommittedRadius}
-                />
+                <RadiusSlider value={radius} onChange={setRadius} onCommit={setCommittedRadius} />
               </div>
               <div>
                 <p className="text-caption mb-3 text-muted-foreground">Kraftstoff</p>
@@ -481,8 +428,8 @@ function HomePage() {
             {center && (
               <div className="mb-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
                 <p className="text-caption min-w-0 text-muted-foreground">
-                  {placeLabel ?? "Suchgebiet"} · {stations.length} Stationen im Umkreis
-                  von {committedRadius} km
+                  {placeLabel ?? "Suchgebiet"} · {stations.length} Stationen im Umkreis von{" "}
+                  {committedRadius} km
                 </p>
                 <div className="flex items-center gap-2">
                   <span className="text-fine text-muted-foreground">
@@ -497,9 +444,7 @@ function HomePage() {
                     disabled={pricesQuery.isFetching || ids.length === 0}
                   >
                     <RefreshCw
-                      className={
-                        pricesQuery.isFetching ? "size-4 animate-spin" : "size-4"
-                      }
+                      className={pricesQuery.isFetching ? "size-4 animate-spin" : "size-4"}
                     />
                   </Button>
                 </div>
@@ -572,11 +517,7 @@ function HomePage() {
 
           <TabsContent value="trip" className="mt-0">
             {trips.hydrated && (
-              <RouteFavoritesBar
-                trips={trips.trips}
-                onSelect={applyTrip}
-                onRemove={trips.remove}
-              />
+              <RouteFavoritesBar trips={trips.trips} onSelect={applyTrip} onRemove={trips.remove} />
             )}
 
             <RouteForm
@@ -660,10 +601,7 @@ function HomePage() {
                   · {routeResult.stations.length} Stationen im Korridor von ±
                   {corridorKm.toFixed(1).replace(".", ",")} km
                 </p>
-                <Select
-                  value={routeSort}
-                  onValueChange={(v) => setRouteSort(v as RouteSortMode)}
-                >
+                <Select value={routeSort} onValueChange={(v) => setRouteSort(v as RouteSortMode)}>
                   <SelectTrigger className="h-11 w-full rounded-full bg-background sm:w-56">
                     <SelectValue />
                   </SelectTrigger>
@@ -680,52 +618,52 @@ function HomePage() {
               className="mt-6"
               list={
                 <>
-                {routeError && <ErrorState error={routeError} />}
-                {!routeError && routeQuery.isFetching && <StationSkeletons />}
-                {!routeError &&
-                  !routeQuery.isFetching &&
-                  routeResult &&
-                  routeStationList.length === 0 && (
+                  {routeError && <ErrorState error={routeError} />}
+                  {!routeError && routeQuery.isFetching && <StationSkeletons />}
+                  {!routeError &&
+                    !routeQuery.isFetching &&
+                    routeResult &&
+                    routeStationList.length === 0 && (
+                      <div className="rounded-lg border border-hairline bg-pearl p-10 text-center">
+                        <h3 className="text-[21px] font-semibold text-ink">
+                          Keine Stationen im Korridor
+                        </h3>
+                        <p className="text-caption mt-2 text-muted-foreground">
+                          Erhöhe die Korridorbreite, um mehr Tankstellen entlang der Strecke zu
+                          finden.
+                        </p>
+                      </div>
+                    )}
+                  {!routeError && !routeQuery.isFetching && routeStationList.length > 0 && (
+                    <StationList
+                      stations={routeStationList}
+                      fuel={fuel}
+                      sort={routeSort}
+                      activeId={activeId}
+                      isFavorite={favorites.isFavorite}
+                      onToggleFavorite={favorites.toggle}
+                      onHover={setActiveId}
+                      onSelect={setActiveId}
+                      trends={trends}
+                      onOpenTrend={setTrendStation}
+                      community={communityProps}
+                      communityStatuses={communityStatuses}
+                      detours={detours}
+                      distanceLabel="Abstand zur Route:"
+                    />
+                  )}
+                  {!routeQueryInput && !routeError && (
                     <div className="rounded-lg border border-hairline bg-pearl p-10 text-center">
-                      <h3 className="text-[21px] font-semibold text-ink">
-                        Keine Stationen im Korridor
+                      <RouteIcon className="mx-auto size-7 text-muted-foreground" />
+                      <h3 className="mt-4 text-[21px] font-semibold text-ink">
+                        Tanken entlang deiner Strecke
                       </h3>
                       <p className="text-caption mt-2 text-muted-foreground">
-                        Erhöhe die Korridorbreite, um mehr Tankstellen entlang der
-                        Strecke zu finden.
+                        Gib Start und Ziel ein – wir zeigen die günstigsten Stationen im Korridor
+                        samt geschätztem Umweg.
                       </p>
                     </div>
                   )}
-                {!routeError && !routeQuery.isFetching && routeStationList.length > 0 && (
-                  <StationList
-                    stations={routeStationList}
-                    fuel={fuel}
-                    sort={routeSort}
-                    activeId={activeId}
-                    isFavorite={favorites.isFavorite}
-                    onToggleFavorite={favorites.toggle}
-                    onHover={setActiveId}
-                    onSelect={setActiveId}
-                    trends={trends}
-                    onOpenTrend={setTrendStation}
-                    community={communityProps}
-                    communityStatuses={communityStatuses}
-                    detours={detours}
-                    distanceLabel="Abstand zur Route:"
-                  />
-                )}
-                {!routeQueryInput && !routeError && (
-                  <div className="rounded-lg border border-hairline bg-pearl p-10 text-center">
-                    <RouteIcon className="mx-auto size-7 text-muted-foreground" />
-                    <h3 className="mt-4 text-[21px] font-semibold text-ink">
-                      Tanken entlang deiner Strecke
-                    </h3>
-                    <p className="text-caption mt-2 text-muted-foreground">
-                      Gib Start und Ziel ein – wir zeigen die günstigsten Stationen im
-                      Korridor samt geschätztem Umweg.
-                    </p>
-                  </div>
-                )}
                 </>
               }
               map={
@@ -759,17 +697,13 @@ function HomePage() {
             />
           </TabsContent>
 
-
-
           <TabsContent value="favorites" className="mt-0">
             {!favorites.hydrated ? (
               <StationSkeletons count={2} />
             ) : favorites.favorites.length === 0 ? (
               <div className="rounded-lg border border-hairline bg-pearl p-10 text-center">
                 <Star className="mx-auto size-7 text-muted-foreground" />
-                <h3 className="mt-4 text-[21px] font-semibold text-ink">
-                  Noch keine Favoriten
-                </h3>
+                <h3 className="mt-4 text-[21px] font-semibold text-ink">Noch keine Favoriten</h3>
                 <p className="text-caption mt-2 text-muted-foreground">
                   Tippe auf den Stern einer Station, um sie hier dauerhaft zu speichern.
                 </p>

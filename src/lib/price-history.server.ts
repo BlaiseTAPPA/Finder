@@ -16,21 +16,30 @@ async function admin() {
 /** Gesehene Stationen registrieren (Grundlage für die Sammlung). */
 export async function upsertSeenStations(stations: Station[]): Promise<void> {
   if (stations.length === 0) return;
-  const db = await admin();
-  const rows = stations.slice(0, 200).map((s) => ({
-    id: s.id,
-    name: s.name,
-    brand: s.brand,
-    street: s.street,
-    house_number: s.houseNumber,
-    post_code: s.postCode,
-    place: s.place,
-    lat: s.lat,
-    lng: s.lng,
-    last_seen_at: new Date().toISOString(),
-  }));
-  const { error } = await db.from("stations").upsert(rows, { onConflict: "id" });
-  if (error) console.error("upsertSeenStations failed", error.message);
+  try {
+    const { isServiceRoleKeyValid } = await import("@/integrations/supabase/client.server");
+    if (!isServiceRoleKeyValid()) {
+      // Wenn kein passender Service-Role-Schlüssel konfiguriert ist, Upsert überspringen
+      return;
+    }
+    const db = await admin();
+    const rows = stations.slice(0, 200).map((s) => ({
+      id: s.id,
+      name: s.name,
+      brand: s.brand,
+      street: s.street,
+      house_number: s.houseNumber,
+      post_code: s.postCode,
+      place: s.place,
+      lat: s.lat,
+      lng: s.lng,
+      last_seen_at: new Date().toISOString(),
+    }));
+    const { error } = await db.from("stations").upsert(rows, { onConflict: "id" });
+    if (error) console.warn("[price-history] upsertSeenStations übersprungen:", error.message);
+  } catch (err: unknown) {
+    console.warn("[price-history] upsertSeenStations Fehler:", (err as Error)?.message || err);
+  }
 }
 
 /** Verlaufspunkte einer Station für eine Sorte. */
@@ -50,7 +59,7 @@ export async function readHistory(
     .order("recorded_at", { ascending: true })
     .limit(5000);
   if (error) {
-    console.error("readHistory failed", error.message);
+    console.warn("[price-history] readHistory nicht verfügbar:", error.message);
     return [];
   }
   return (data ?? []).map((row) => ({
@@ -60,10 +69,7 @@ export async function readHistory(
 }
 
 /** Stationen, die zuletzt von Nutzern gesehen wurden (Sammel-Pool). */
-export async function collectablePool(
-  limit: number,
-  afterId: string | null,
-): Promise<string[]> {
+export async function collectablePool(limit: number, afterId: string | null): Promise<string[]> {
   const db = await admin();
   const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   let query = db
@@ -79,9 +85,7 @@ export async function collectablePool(
 }
 
 /** Letzter gespeicherter Preis je (Station, Sorte). */
-export async function lastKnownPrices(
-  ids: string[],
-): Promise<Map<string, number>> {
+export async function lastKnownPrices(ids: string[]): Promise<Map<string, number>> {
   const db = await admin();
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await db
@@ -133,9 +137,7 @@ export function diffRows(
   return rows;
 }
 
-export async function insertHistoryRows(
-  rows: ReturnType<typeof diffRows>,
-): Promise<number> {
+export async function insertHistoryRows(rows: ReturnType<typeof diffRows>): Promise<number> {
   if (rows.length === 0) return 0;
   const db = await admin();
   const { error } = await db.from("price_history").insert(rows);
@@ -213,7 +215,7 @@ export async function readHistoryBulk(
     .order("recorded_at", { ascending: true })
     .limit(20000);
   if (error) {
-    console.error("readHistoryBulk failed", error.message);
+    console.warn("[price-history] readHistoryBulk nicht verfügbar:", error.message);
     return map;
   }
   for (const row of data ?? []) {

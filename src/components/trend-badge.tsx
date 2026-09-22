@@ -1,11 +1,6 @@
 /** Trend-Badge (Preisniveau der letzten 7 Tage) + Empfehlungshinweis. */
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/format";
 import type { TrendSummary } from "@/lib/trend.functions";
@@ -42,9 +37,9 @@ export function TrendBadge({ trend }: { trend: TrendSummary | undefined }) {
         </TooltipTrigger>
         <TooltipContent className="max-w-[240px]">
           <p className="text-fine">
-            Der aktuelle Preis liegt über {trend.percentile}% aller Messwerte der
-            letzten 7 Tage (Spanne {formatPrice(trend.min)} – {formatPrice(trend.max)},
-            Ø {formatPrice(trend.avg)}, {trend.samples} Messungen).
+            Der aktuelle Preis liegt über {trend.percentile}% aller Messwerte der letzten 7 Tage
+            (Spanne {formatPrice(trend.min)} – {formatPrice(trend.max)}, Ø {formatPrice(trend.avg)},{" "}
+            {trend.samples} Messungen).
           </p>
         </TooltipContent>
       </Tooltip>

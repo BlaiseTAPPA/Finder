@@ -15,7 +15,7 @@ export async function searchPlaces(query: string): Promise<Suggestion[]> {
   const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=0&countrycodes=de&q=${encodeURIComponent(query)}`;
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "Tankstellen-Finder (Lovable app)",
+      "User-Agent": "Tankstellen-Finder",
       Accept: "application/json",
     },
   });

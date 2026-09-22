@@ -3,7 +3,7 @@
  * Nach der Anmeldung werden lokale Favoriten einmalig übernommen (Migration).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useSafeAuth, useSafeUser } from "./auth";
 import type { Station } from "@/types/station";
 import { getAccount, setFavorite, syncLocalData } from "./account.functions";
 import { readLocalTrips } from "./route-favorites";
@@ -36,8 +36,8 @@ function write(next: FavoriteStation[]) {
 export function useFavorites() {
   const [favorites, setFavorites] = useState<FavoriteStation[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const { isSignedIn, isLoaded } = useAuth();
-  const { user } = useUser();
+  const { isSignedIn, isLoaded } = useSafeAuth();
+  const { user } = useSafeUser();
   const syncing = useRef(false);
 
   // Erst nach der Hydratation lesen -> kein Server/Client-Mismatch.
@@ -83,11 +83,7 @@ export function useFavorites() {
   const toggle = useCallback(
     (station: Station) => {
       const exists = favorites.some((f) => f.id === station.id);
-      persist(
-        exists
-          ? favorites.filter((f) => f.id !== station.id)
-          : [...favorites, station],
-      );
+      persist(exists ? favorites.filter((f) => f.id !== station.id) : [...favorites, station]);
       if (isSignedIn) {
         void setFavorite({ data: { station, favorite: !exists } }).catch(() => {
           /* Konto-Sync später erneut */
@@ -98,23 +94,15 @@ export function useFavorites() {
   );
 
   /** Preise der Favoriten mit frischen Daten überschreiben. */
-  const syncPrices = useCallback(
-    (updates: Record<string, Pick<Station, "isOpen" | "prices">>) => {
-      setFavorites((current) => {
-        const next = current.map((fav) =>
-          updates[fav.id] ? { ...fav, ...updates[fav.id] } : fav,
-        );
-        write(next);
-        return next;
-      });
-    },
-    [],
-  );
+  const syncPrices = useCallback((updates: Record<string, Pick<Station, "isOpen" | "prices">>) => {
+    setFavorites((current) => {
+      const next = current.map((fav) => (updates[fav.id] ? { ...fav, ...updates[fav.id] } : fav));
+      write(next);
+      return next;
+    });
+  }, []);
 
-  const isFavorite = useCallback(
-    (id: string) => favorites.some((f) => f.id === id),
-    [favorites],
-  );
+  const isFavorite = useCallback((id: string) => favorites.some((f) => f.id === id), [favorites]);
 
   return { favorites, hydrated, toggle, isFavorite, syncPrices };
 }

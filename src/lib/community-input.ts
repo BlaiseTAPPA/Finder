@@ -42,15 +42,12 @@ export type ConfirmInput = z.infer<typeof confirmInputSchema>;
 
 /** Ergebnis einer Beitrags-Aktion (nie ein geworfener Fehler für Fachfälle). */
 export type ContributionResult =
-  | { ok: true }
-  | { ok: false; reason: "rate_limited" | "too_far" | "invalid_input" | "unknown" };
+  { ok: true } | { ok: false; reason: "rate_limited" | "too_far" | "invalid_input" | "unknown" };
 
-export const RESULT_MESSAGES: Record<
-  Exclude<ContributionResult, { ok: true }>["reason"],
-  string
-> = {
-  rate_limited: "Du hast das kürzlich schon gemeldet. Bitte später erneut versuchen.",
-  too_far: "Geh näher an die Tankstelle (max. 500 m), um den Preis zu bestätigen.",
-  invalid_input: "Eingabe ungültig oder unangemessen. Bitte prüfen.",
-  unknown: "Das hat gerade nicht geklappt. Bitte später erneut versuchen.",
-};
+export const RESULT_MESSAGES: Record<Exclude<ContributionResult, { ok: true }>["reason"], string> =
+  {
+    rate_limited: "Du hast das kürzlich schon gemeldet. Bitte später erneut versuchen.",
+    too_far: "Geh näher an die Tankstelle (max. 500 m), um den Preis zu bestätigen.",
+    invalid_input: "Eingabe ungültig oder unangemessen. Bitte prüfen.",
+    unknown: "Das hat gerade nicht geklappt. Bitte später erneut versuchen.",
+  };

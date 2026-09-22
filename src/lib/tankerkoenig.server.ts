@@ -3,6 +3,7 @@
  * Enthält den In-Memory-Cache (TTL) und die Quota-Behandlung.
  * Darf niemals direkt aus Komponenten importiert werden.
  */
+import "./env.server";
 import {
   listResponseSchema,
   normalizePrices,
@@ -40,14 +41,24 @@ export class TankerkoenigError extends Error {
   }
 }
 
+function isInvalidKey(key: string | undefined): boolean {
+  if (!key) return true;
+  const trimmed = key.trim();
+  if (!trimmed) return true;
+  if (/^0{8}-0{4}-0{4}-0{4}-0{12}$/i.test(trimmed)) return true;
+  if (/^0+$/.test(trimmed)) return true;
+  return false;
+}
+
 function apiKey(): string | null {
-  // Supporte à la fois TANKERKOENIG_API_KEY et VITE_TANKERKOENIG_API_KEY
   const key = process.env["TANKERKOENIG_API_KEY"] || process.env["VITE_TANKERKOENIG_API_KEY"];
-  if (!key) {
-    console.warn("[Tankerkönig Server] ⚠️ Aucun clé API trouvée dans les variables d'environnement.");
+  if (isInvalidKey(key)) {
+    console.warn(
+      "[Tankerkönig Server] ⚠️ Aucun clé API valide trouvée dans les variables d'environnement.",
+    );
     return null;
   }
-  return key;
+  return key!.trim();
 }
 
 /** Requête HTTP sécurisée avec Timeout de 5s pour éviter tout blocage du SSR */
@@ -61,9 +72,10 @@ async function request(url: string, timeoutMs = 5000): Promise<unknown> {
       headers: { Accept: "application/json" },
       signal: controller.signal,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     clearTimeout(timer);
-    if (err?.name === "AbortError") {
+    const errorObj = err as { name?: string } | null;
+    if (errorObj?.name === "AbortError") {
       throw new TankerkoenigError("network", "Délai d'attente dépassé (Timeout) vers Tankerkönig.");
     }
     throw new TankerkoenigError("network", "Tankerkönig ist nicht erreichbar.");
@@ -84,11 +96,14 @@ async function request(url: string, timeoutMs = 5000): Promise<unknown> {
   const json = (await res.json()) as { ok?: boolean; message?: string };
   if (json && json.ok === false) {
     const msg = json.message ?? "Unbekannter Fehler";
-    if (/limit|quota|too many|apikey/i.test(msg)) {
+    const isApiKeyError = /apikey|key.*existiert|key.*deaktiviert|invalid.*key/i.test(msg);
+    const isQuotaError = /limit|quota|too many/i.test(msg);
+
+    if (isApiKeyError || isQuotaError) {
       throw new TankerkoenigError(
-        /apikey/i.test(msg) ? "missing-key" : "quota",
-        /apikey/i.test(msg)
-          ? "Der API-Schlüssel wurde von Tankerkönig abgelehnt."
+        isApiKeyError ? "missing-key" : "quota",
+        isApiKeyError
+          ? "Der Tankerkönig-API-Schlüssel wurde abgelehnt (ungültig oder deaktiviert)."
           : "Anfragekontingent überschritten. Bitte in einigen Minuten erneut versuchen.",
       );
     }
@@ -107,7 +122,10 @@ export async function fetchStations(input: {
 }): Promise<Station[]> {
   const key_api = apiKey();
   if (!key_api) {
-    return []; // Renvoie un tableau vide plutôt que de faire crasher le SSR
+    throw new TankerkoenigError(
+      "missing-key",
+      "Kein gültiger Tankerkönig-API-Schlüssel konfiguriert. Bitte TANKERKOENIG_API_KEY hinterlegen.",
+    );
   }
 
   const gridLat = input.lat.toFixed(2);
@@ -117,18 +135,13 @@ export async function fetchStations(input: {
   const cached = readCache<Station[]>(key);
   if (cached) return cached;
 
-  try {
-    const url = `${BASE}/list.php?lat=${input.lat}&lng=${input.lng}&rad=${input.radius}&sort=dist&type=all&apikey=${key_api}`;
-    const raw = await request(url);
-    const parsed = listResponseSchema.parse(raw);
-    const stations = (parsed.stations ?? []).map(normalizeStation);
+  const url = `${BASE}/list.php?lat=${input.lat}&lng=${input.lng}&rad=${input.radius}&sort=dist&type=all&apikey=${key_api}`;
+  const raw = await request(url);
+  const parsed = listResponseSchema.parse(raw);
+  const stations = (parsed.stations ?? []).map(normalizeStation);
 
-    writeCache(key, stations, 5 * 60 * 1000);
-    return stations;
-  } catch (error) {
-    console.error("[Tankerkönig Server] Échec de récupération des stations :", error);
-    return [];
-  }
+  writeCache(key, stations, 5 * 60 * 1000);
+  return stations;
 }
 
 /**
@@ -145,8 +158,7 @@ export async function fetchPrices(
   const sorted = [...ids].sort();
   const key = `prices:${sorted.join(",")}`;
 
-  const cached =
-    readCache<Record<string, { isOpen: boolean; prices: FuelPrices }>>(key);
+  const cached = readCache<Record<string, { isOpen: boolean; prices: FuelPrices }>>(key);
   if (cached) return cached;
 
   try {
@@ -183,7 +195,7 @@ export async function geocode(
   try {
     res = await fetch(url, {
       headers: {
-        "User-Agent": "Tankstellen-Finder (Lovable app)",
+        "User-Agent": "Tankstellen-Finder",
         Accept: "application/json",
       },
       signal: controller.signal,

@@ -1,0 +1,6 @@
+{
+  "name": "Tankstellen-Finder",
+  "description": "Tankstellen in der Nähe finden und Spritpreise in Echtzeit vergleichen.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

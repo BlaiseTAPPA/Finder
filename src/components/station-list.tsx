@@ -1,10 +1,6 @@
 /** Sortierte Ergebnisliste mit Hervorhebung der günstigsten Station. */
 import { useMemo } from "react";
-import {
-  StationCard,
-  type CardCommunity,
-  type CardDetour,
-} from "@/components/station-card";
+import { StationCard, type CardCommunity, type CardDetour } from "@/components/station-card";
 import { cheapestStationId } from "@/lib/format";
 import type { TrendSummary } from "@/lib/trend.functions";
 import type { CommunityStatus } from "@/lib/community";
@@ -94,9 +90,7 @@ export function StationList({
   return (
     <div
       className={
-        layout === "grid"
-          ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
-          : "space-y-3"
+        layout === "grid" ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" : "space-y-3"
       }
     >
       {sorted.map((station) => (
@@ -115,9 +109,7 @@ export function StationList({
           onOpenTrend={onOpenTrend}
           detour={detours?.get(station.id)}
           community={
-            community
-              ? { ...community, status: communityStatuses?.get(station.id) }
-              : undefined
+            community ? { ...community, status: communityStatuses?.get(station.id) } : undefined
           }
           distanceLabel={distanceLabel}
         />

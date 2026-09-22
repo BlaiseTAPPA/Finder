@@ -40,7 +40,7 @@ export function detourScore(
 ): number {
   if (price === null || referencePrice === null) return Number.NEGATIVE_INFINITY;
   const savings = (referencePrice - price) * TANK_LITERS;
-  const fuelCost = (detour.detourKm * DETOUR_CONSUMPTION) / 100 * price;
+  const fuelCost = ((detour.detourKm * DETOUR_CONSUMPTION) / 100) * price;
   const timeCost = (detour.detourMin / 60) * TIME_VALUE_EUR_H;
   return savings - fuelCost - timeCost;
 }
@@ -50,7 +50,5 @@ export function medianPrice(prices: Array<number | null>): number | null {
   const values = prices.filter((p): p is number => p !== null).sort((a, b) => a - b);
   if (values.length === 0) return null;
   const middle = Math.floor(values.length / 2);
-  return values.length % 2 === 0
-    ? ((values[middle - 1]! + values[middle]!) / 2)
-    : values[middle]!;
+  return values.length % 2 === 0 ? (values[middle - 1]! + values[middle]!) / 2 : values[middle]!;
 }

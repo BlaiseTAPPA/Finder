@@ -16,12 +16,15 @@ export async function upsertProfile(
   avatarUrl: string | null,
 ) {
   const db = await admin();
-  await db
-    .from("profiles")
-    .upsert(
-      { clerk_user_id: clerkUserId, username, avatar_url: avatarUrl, updated_at: new Date().toISOString() },
-      { onConflict: "clerk_user_id" },
-    );
+  await db.from("profiles").upsert(
+    {
+      clerk_user_id: clerkUserId,
+      username,
+      avatar_url: avatarUrl,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "clerk_user_id" },
+  );
 }
 
 export async function listFavorites(clerkUserId: string): Promise<Station[]> {
@@ -79,10 +82,7 @@ export async function addTrip(clerkUserId: string, trip: SavedTrip) {
 
 export async function removeTrip(clerkUserId: string, tripId: string) {
   const db = await admin();
-  const { data } = await db
-    .from("user_trips")
-    .select("id, trip")
-    .eq("clerk_user_id", clerkUserId);
+  const { data } = await db.from("user_trips").select("id, trip").eq("clerk_user_id", clerkUserId);
   const match = (data ?? []).find(
     (row) => (row.trip as unknown as SavedTrip | null)?.id === tripId,
   );
@@ -110,7 +110,12 @@ export async function listAlerts(clerkUserId: string): Promise<PriceAlert[]> {
 
 export async function upsertAlert(
   clerkUserId: string,
-  input: { stationId: string; stationName: string; fuelType: PriceAlert["fuelType"]; threshold: number },
+  input: {
+    stationId: string;
+    stationName: string;
+    fuelType: PriceAlert["fuelType"];
+    threshold: number;
+  },
 ) {
   const db = await admin();
   await db.from("price_alerts").upsert(
@@ -128,11 +133,7 @@ export async function upsertAlert(
 
 export async function setAlertActive(clerkUserId: string, id: string, active: boolean) {
   const db = await admin();
-  await db
-    .from("price_alerts")
-    .update({ active })
-    .eq("clerk_user_id", clerkUserId)
-    .eq("id", id);
+  await db.from("price_alerts").update({ active }).eq("clerk_user_id", clerkUserId).eq("id", id);
 }
 
 export async function deleteAlert(clerkUserId: string, id: string) {

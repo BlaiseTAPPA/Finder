@@ -1,7 +1,7 @@
 /** Preisverlauf einer Station als Liniendiagramm (7/14/30 Tage) im Dialog. */
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/server-fn-client";
 import {
   CartesianGrid,
   Line,
@@ -51,8 +51,7 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
     queryKey: ["price-history", station?.id, fuel, days],
     enabled: station !== null,
     staleTime: 5 * 60 * 1000,
-    queryFn: () =>
-      fetchHistory({ data: { stationId: station!.id, fuelType: fuel, days } }),
+    queryFn: () => fetchHistory({ data: { stationId: station!.id, fuelType: fuel, days } }),
   });
 
   const points = query.data?.points ?? [];
@@ -97,10 +96,7 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={points}
-                margin={{ top: 8, right: 8, bottom: 0, left: -12 }}
-              >
+              <LineChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="currentColor"
@@ -131,7 +127,11 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
                     stroke="currentColor"
                     strokeDasharray="4 4"
                     className="text-muted-foreground"
-                    label={{ value: `Ø ${avg.toFixed(3)}`, fontSize: 11, position: "insideTopRight" }}
+                    label={{
+                      value: `Ø ${avg.toFixed(3)}`,
+                      fontSize: 11,
+                      position: "insideTopRight",
+                    }}
                   />
                 )}
                 <Line

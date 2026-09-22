@@ -62,8 +62,7 @@ async function fetchJson(url: string): Promise<unknown> {
 export const osrmProvider: RoutingProvider = {
   name: "osrm",
   async route(origin, destination) {
-    const base =
-      process.env["OSRM_BASE_URL"] ?? "https://router.project-osrm.org";
+    const base = process.env["OSRM_BASE_URL"] ?? "https://router.project-osrm.org";
     const coords = `${origin.lng},${origin.lat};${destination.lng},${destination.lat}`;
     const url = `${base}/route/v1/driving/${coords}?overview=simplified&geometries=geojson&alternatives=false&steps=false`;
 
@@ -88,10 +87,7 @@ export const osrmProvider: RoutingProvider = {
 
     const route = payload.routes?.[0];
     if (payload.code !== "Ok" || !route?.geometry?.coordinates?.length) {
-      throw new RoutingError(
-        "no-route",
-        "Zwischen Start und Ziel wurde keine Route gefunden.",
-      );
+      throw new RoutingError("no-route", "Zwischen Start und Ziel wurde keine Route gefunden.");
     }
 
     return {

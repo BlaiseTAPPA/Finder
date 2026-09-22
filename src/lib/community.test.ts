@@ -31,21 +31,17 @@ describe("classifyCommunity", () => {
   });
 
   it("erkennt frische Bestätigungen", () => {
-    expect(classifyCommunity([hoursAgo(0), hoursAgo(1), hoursAgo(2)], [], NOW)).toBe(
-      "confirmed",
-    );
+    expect(classifyCommunity([hoursAgo(0), hoursAgo(1), hoursAgo(2)], [], NOW)).toBe("confirmed");
   });
 
   it("erkennt bestrittene Preise", () => {
-    expect(classifyCommunity([], [hoursAgo(0), hoursAgo(1), hoursAgo(2)], NOW)).toBe(
-      "disputed",
-    );
+    expect(classifyCommunity([], [hoursAgo(0), hoursAgo(1), hoursAgo(2)], NOW)).toBe("disputed");
   });
 
   it("bleibt neutral bei ausgeglichener Lage", () => {
-    expect(
-      classifyCommunity([hoursAgo(1), hoursAgo(2)], [hoursAgo(1), hoursAgo(2)], NOW),
-    ).toBe("neutral");
+    expect(classifyCommunity([hoursAgo(1), hoursAgo(2)], [hoursAgo(1), hoursAgo(2)], NOW)).toBe(
+      "neutral",
+    );
   });
 
   it("gewichtet alte Bestätigungen schwächer als frische Meldungen", () => {
@@ -61,13 +57,7 @@ describe("classifyCommunity", () => {
 
 describe("buildStatus", () => {
   it("zählt nur Ereignisse im Fenster und meldet die letzte Aktivität", () => {
-    const status = buildStatus(
-      "st-1",
-      "e5",
-      [hoursAgo(1), hoursAgo(80)],
-      [hoursAgo(3)],
-      NOW,
-    );
+    const status = buildStatus("st-1", "e5", [hoursAgo(1), hoursAgo(80)], [hoursAgo(3)], NOW);
     expect(status.confirmationsCount).toBe(1);
     expect(status.reportsCount).toBe(1);
     expect(status.lastActivityAt).toBe(new Date(NOW - 3_600_000).toISOString());

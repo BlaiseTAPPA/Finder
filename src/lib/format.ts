@@ -30,10 +30,7 @@ export function formatRelativeTime(timestamp: number | null): string {
 }
 
 /** Günstigste geöffnete Station für die gewählte Sorte. */
-export function cheapestStationId(
-  stations: Station[],
-  fuel: FuelType,
-): string | null {
+export function cheapestStationId(stations: Station[], fuel: FuelType): string | null {
   let best: Station | null = null;
   for (const station of stations) {
     const price = station.prices[fuel];
@@ -50,11 +47,9 @@ export function cheapestStationId(
  */
 export function directionsUrl(station: Station): string {
   const isApple =
-    typeof navigator !== "undefined" &&
-    /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+    typeof navigator !== "undefined" && /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
   const label = encodeURIComponent(station.name);
   return isApple
     ? `https://maps.apple.com/?daddr=${station.lat},${station.lng}&q=${label}`
     : `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`;
 }
-

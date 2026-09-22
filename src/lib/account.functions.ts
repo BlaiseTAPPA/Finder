@@ -1,24 +1,13 @@
-/** Server-Funktionen für konto-gebundene Daten (Favoriten, Trajets, Alarme). */
-import { createServerFn } from "@tanstack/react-start";
-import { requireClerkAuth } from "./clerk-auth";
-import {
-  idSchema,
-  saveTripSchema,
-  setFavoriteSchema,
-  syncSchema,
-  toggleAlertSchema,
-  upsertAlertSchema,
-  type PriceAlert,
+import { fetchApi } from "./server-fn-client";
+import type {
+  PriceAlert,
+  SaveTripInput,
+  SetFavoriteInput,
+  SyncInput,
+  ToggleAlertInput,
+  UpsertAlertInput,
 } from "./account-input";
 import type { SavedTrip, Station } from "@/types/station";
-
-/** Öffentlicher Clerk-Schlüssel (Publishable Key) für den Browser. */
-export const getClerkPublishableKey = createServerFn({ method: "GET" }).handler(
-  async (): Promise<string | null> => {
-    const env = (typeof process !== "undefined" ? process.env : {}) as Record<string, string | undefined>;
-    return env["CLERK_PUBLISHABLE_KEY"] ?? null;
-  },
-);
 
 export interface AccountData {
   favorites: Station[];
@@ -26,98 +15,49 @@ export interface AccountData {
   alerts: PriceAlert[];
 }
 
-export const getAccount = createServerFn({ method: "GET" })
-  .middleware([requireClerkAuth])
-  .handler(async ({ context }): Promise<AccountData> => {
-    const { listAlerts, listFavorites, listTrips, latestPrices } = await import(
-      "./account.server"
-    );
-    const [favorites, trips, alerts] = await Promise.all([
-      listFavorites(context.clerkUserId),
-      listTrips(context.clerkUserId),
-      listAlerts(context.clerkUserId),
-    ]);
-    const prices = await latestPrices([...new Set(alerts.map((a) => a.stationId))]);
-    return {
-      favorites,
-      trips,
-      alerts: alerts.map((a) => ({
-        ...a,
-        currentPrice: prices[a.stationId]?.[a.fuelType] ?? null,
-      })),
-    };
-  });
+/** Öffentlicher Clerk-Schlüssel (Publishable Key) für den Browser. */
+export async function getClerkPublishableKey(): Promise<string | null> {
+  if (typeof import.meta !== "undefined" && import.meta.env?.["VITE_CLERK_PUBLISHABLE_KEY"]) {
+    return import.meta.env["VITE_CLERK_PUBLISHABLE_KEY"] as string;
+  }
+  try {
+    const res = await fetch("/api/account/clerk-key");
+    if (!res.ok) return null;
+    const json = (await res.json()) as { publishableKey: string | null };
+    return json.publishableKey;
+  } catch {
+    return null;
+  }
+}
 
-/** Einmalige Übernahme lokaler Daten nach der Anmeldung. */
-export const syncLocalData = createServerFn({ method: "POST" })
-  .middleware([requireClerkAuth])
-  .validator((input: unknown) => syncSchema.parse(input))
-  .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { addFavorite, addTrip, upsertProfile } = await import("./account.server");
-    await upsertProfile(context.clerkUserId, data.username ?? null, data.avatarUrl ?? null);
-    for (const station of data.favorites) {
-      await addFavorite(context.clerkUserId, station as unknown as Station);
-    }
-    for (const trip of data.trips) {
-      await addTrip(context.clerkUserId, trip as unknown as SavedTrip);
-    }
-    return { ok: true };
-  });
+export async function getAccount(): Promise<AccountData> {
+  return fetchApi<AccountData>("/api/account", undefined, "GET");
+}
 
-export const setFavorite = createServerFn({ method: "POST" })
-  .middleware([requireClerkAuth])
-  .validator((input: unknown) => setFavoriteSchema.parse(input))
-  .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { addFavorite, removeFavorite } = await import("./account.server");
-    if (data.favorite) {
-      await addFavorite(context.clerkUserId, data.station as unknown as Station);
-    } else {
-      await removeFavorite(context.clerkUserId, data.station.id);
-    }
-    return { ok: true };
-  });
+export async function syncLocalData(args: { data: SyncInput }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/sync", args.data);
+}
 
-export const saveTripForUser = createServerFn({ method: "POST" })
-  .middleware([requireClerkAuth])
-  .validator((input: unknown) => saveTripSchema.parse(input))
-  .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { addTrip } = await import("./account.server");
-    await addTrip(context.clerkUserId, data.trip as unknown as SavedTrip);
-    return { ok: true };
-  });
+export async function setFavorite(args: { data: SetFavoriteInput }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/favorite", args.data);
+}
 
-export const deleteTripForUser = createServerFn({ method: "POST" })
-  .middleware([requireClerkAuth])
-  .validator((input: unknown) => idSchema.parse(input))
-  .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { removeTrip } = await import("./account.server");
-    await removeTrip(context.clerkUserId, data.id);
-    return { ok: true };
-  });
+export async function saveTripForUser(args: { data: SaveTripInput }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/save-trip", args.data);
+}
 
-export const saveAlert = createServerFn({ method: "POST" })
-  .middleware([requireClerkAuth])
-  .validator((input: unknown) => upsertAlertSchema.parse(input))
-  .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { upsertAlert } = await import("./account.server");
-    await upsertAlert(context.clerkUserId, data);
-    return { ok: true };
-  });
+export async function deleteTripForUser(args: { data: { id: string } }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/delete-trip", args.data);
+}
 
-export const toggleAlert = createServerFn({ method: "POST" })
-  .middleware([requireClerkAuth])
-  .validator((input: unknown) => toggleAlertSchema.parse(input))
-  .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { setAlertActive } = await import("./account.server");
-    await setAlertActive(context.clerkUserId, data.id, data.active);
-    return { ok: true };
-  });
+export async function saveAlert(args: { data: UpsertAlertInput }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/save-alert", args.data);
+}
 
-export const removeAlert = createServerFn({ method: "POST" })
-  .middleware([requireClerkAuth])
-  .validator((input: unknown) => idSchema.parse(input))
-  .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { deleteAlert } = await import("./account.server");
-    await deleteAlert(context.clerkUserId, data.id);
-    return { ok: true };
-  });
+export async function toggleAlert(args: { data: ToggleAlertInput }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/toggle-alert", args.data);
+}
+
+export async function removeAlert(args: { data: { id: string } }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/remove-alert", args.data);
+}

@@ -2,14 +2,9 @@
 import { useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/server-fn-client";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { confirmPrice } from "@/lib/community.functions";
 import { RESULT_MESSAGES } from "@/lib/community-input";
 import { CONFIRM_RADIUS_M, isNearStation } from "@/lib/community";
@@ -23,13 +18,7 @@ interface Props {
   onDone?: (() => void) | undefined;
 }
 
-export function ConfirmPriceButton({
-  station,
-  fuel,
-  contributorId,
-  userCoords,
-  onDone,
-}: Props) {
+export function ConfirmPriceButton({ station, fuel, contributorId, userCoords, onDone }: Props) {
   const [pending, setPending] = useState(false);
   const call = useServerFn(confirmPrice);
 
@@ -82,11 +71,7 @@ export function ConfirmPriceButton({
                 void handleClick();
               }}
             >
-              {pending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Check className="size-4" />
-              )}
+              {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Stimmt
             </Button>
           </span>

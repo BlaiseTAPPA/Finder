@@ -141,9 +141,7 @@ export function computeTrend({
     current,
     min: prices.length ? round3(Math.min(...prices)) : null,
     max: prices.length ? round3(Math.max(...prices)) : null,
-    avg: prices.length
-      ? round3(prices.reduce((a, b) => a + b, 0) / prices.length)
-      : null,
+    avg: prices.length ? round3(prices.reduce((a, b) => a + b, 0) / prices.length) : null,
     percentile: null,
     classification: null,
     hourly: hourlyPattern(points),

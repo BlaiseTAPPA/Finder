@@ -22,13 +22,15 @@ export const stationSchema = z.object({
   }),
 });
 
-export const tripSchema = z.object({
-  id: z.string().min(1).max(64),
-  name: z.string().min(1).max(80),
-  createdAt: z.number().optional(),
-  from: z.unknown().optional(),
-  to: z.unknown().optional(),
-}).passthrough();
+export const tripSchema = z
+  .object({
+    id: z.string().min(1).max(64),
+    name: z.string().min(1).max(80),
+    createdAt: z.number().optional(),
+    from: z.unknown().optional(),
+    to: z.unknown().optional(),
+  })
+  .passthrough();
 
 export const setFavoriteSchema = z.object({
   station: stationSchema,

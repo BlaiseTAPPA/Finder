@@ -30,10 +30,7 @@ export async function stationCoords(stationId: string): Promise<StationCoords | 
 }
 
 /** true, wenn der Beitragende das Tageslimit erreicht hat. */
-export async function overDailyLimit(
-  contributorId: string,
-  max: number,
-): Promise<boolean> {
+export async function overDailyLimit(contributorId: string, max: number): Promise<boolean> {
   const db = await admin();
   const since = new Date(Date.now() - 24 * HOUR).toISOString();
   const [reports, confirmations] = await Promise.all([

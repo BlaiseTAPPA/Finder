@@ -4,7 +4,7 @@
  * ohne Datenmodell oder Server-Funktionen zu ändern.
  */
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useSafeAuth } from "./auth";
 
 const KEY = "tankstellen:contributor";
 
@@ -23,7 +23,7 @@ function uuid(): string {
 /** Gibt die ID erst nach der Hydratation zurück (kein SSR-Mismatch). */
 export function useContributorId(): string | null {
   const [id, setId] = useState<string | null>(null);
-  const { isSignedIn, userId } = useAuth();
+  const { isSignedIn, userId } = useSafeAuth();
 
   useEffect(() => {
     try {

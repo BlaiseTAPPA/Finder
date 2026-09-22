@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowLeft, BellRing, Trash2 } from "lucide-react";
@@ -14,34 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  getAccount,
-  removeAlert,
-  saveAlert,
-  toggleAlert,
-} from "@/lib/account.functions";
+import { getAccount, removeAlert, saveAlert, toggleAlert } from "@/lib/account.functions";
 import { FUEL_LABELS, FUEL_TYPES, type FuelType } from "@/types/station";
 
-export const Route = createFileRoute("/_protected/alerts")({
-  head: () => ({
-    meta: [
-      { title: "Preisalarme – Tankstellen-Finder" },
-      {
-        name: "description",
-        content:
-          "Lege Preisalarme für deine Lieblingstankstellen an und werde bei günstigen Preisen informiert.",
-      },
-      { property: "og:title", content: "Preisalarme – Tankstellen-Finder" },
-      {
-        property: "og:description",
-        content: "Preisschwellen je Station und Kraftstoff festlegen.",
-      },
-    ],
-  }),
-  component: AlertsPage,
-});
-
-function AlertsPage() {
+export function AlertsPage() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["account"],
@@ -153,13 +129,9 @@ function AlertsPage() {
           <p className="text-sm text-muted-foreground">Noch keine Alarme.</p>
         ) : (
           alerts.map((alert) => {
-            const hit =
-              alert.currentPrice !== null && alert.currentPrice <= alert.threshold;
+            const hit = alert.currentPrice !== null && alert.currentPrice <= alert.threshold;
             return (
-              <div
-                key={alert.id}
-                className="flex items-center gap-3 rounded-2xl border p-4"
-              >
+              <div key={alert.id} className="flex items-center gap-3 rounded-2xl border p-4">
                 <BellRing
                   className={
                     hit && alert.active ? "size-5 text-primary" : "size-5 text-muted-foreground"

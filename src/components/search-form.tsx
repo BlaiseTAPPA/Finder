@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const schema = z.object({
-  query: z
-    .string()
-    .min(2, "Bitte mindestens 2 Zeichen eingeben")
-    .max(120, "Eingabe zu lang"),
+  query: z.string().min(2, "Bitte mindestens 2 Zeichen eingeben").max(120, "Eingabe zu lang"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -59,19 +56,13 @@ export function SearchForm({ onSearch, onLocate, searching, locating }: Props) {
             disabled={locating}
             className="h-12 flex-1 rounded-full px-5 text-primary sm:flex-none"
           >
-            {locating ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <MapPin className="size-4" />
-            )}
+            {locating ? <Loader2 className="size-4 animate-spin" /> : <MapPin className="size-4" />}
             <span className="ml-1 hidden min-[380px]:inline">Standort</span>
           </Button>
         </div>
       </div>
       {form.formState.errors.query && (
-        <p className="text-fine text-destructive">
-          {form.formState.errors.query.message}
-        </p>
+        <p className="text-fine text-destructive">{form.formState.errors.query.message}</p>
       )}
     </form>
   );

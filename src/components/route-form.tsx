@@ -1,6 +1,6 @@
 /** Eingabe eines Trajets: Start, Ziel, Korridorbreite. */
 import { useEffect, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/server-fn-client";
 import { ArrowRight, Crosshair, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +23,7 @@ interface FieldProps {
   trailing?: React.ReactNode;
 }
 
-function PlaceField({
-  id,
-  label,
-  value,
-  placeholder,
-  onChange,
-  onPick,
-  trailing,
-}: FieldProps) {
+function PlaceField({ id, label, value, placeholder, onChange, onPick, trailing }: FieldProps) {
   const call = useServerFn(suggestPlaces);
   const [items, setItems] = useState<PlaceSuggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -203,11 +195,7 @@ export function RouteForm({
           className="h-12 w-full rounded-full px-6 sm:h-11 sm:w-auto"
           disabled={searching || !origin || !destination}
         >
-          {searching ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Search className="size-4" />
-          )}
+          {searching ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
           Trajet suchen
         </Button>
       </div>

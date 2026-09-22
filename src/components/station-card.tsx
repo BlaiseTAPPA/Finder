@@ -54,7 +54,6 @@ interface Props {
   distanceLabel?: string | undefined;
 }
 
-
 export function StationCard({
   station,
   fuel,
@@ -70,7 +69,6 @@ export function StationCard({
   detour,
   community,
   distanceLabel,
-
 }: Props) {
   return (
     <Card
@@ -123,9 +121,7 @@ export function StationCard({
           variant="outline"
           className={cn(
             "text-fine rounded-full border-0 px-2.5 py-1 font-medium",
-            station.isOpen
-              ? "bg-success/12 text-success"
-              : "bg-destructive/10 text-destructive",
+            station.isOpen ? "bg-success/12 text-success" : "bg-destructive/10 text-destructive",
           )}
         >
           {station.isOpen ? "Geöffnet" : "Geschlossen"}
@@ -222,7 +218,6 @@ export function StationCard({
           </>
         )}
       </div>
-
     </Card>
   );
 }
