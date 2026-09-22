@@ -25,7 +25,10 @@ export function ResultsLayout({ list, map, className }: Props) {
 
   return (
     <div
-      className={cn("grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]", className)}
+      className={cn(
+        "grid w-full min-w-0 gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]",
+        className,
+      )}
     >
       <div className="md:hidden">
         <Tabs value={view} onValueChange={(v) => setView(v as "list" | "map")}>
@@ -48,15 +51,17 @@ export function ResultsLayout({ list, map, className }: Props) {
         </Tabs>
       </div>
 
-      <div className={cn("order-2 lg:order-1", view === "map" && "hidden md:block")}>{list}</div>
+      <div className={cn("order-2 min-w-0 lg:order-1", view === "map" && "hidden md:block")}>
+        {list}
+      </div>
 
       <div
         className={cn(
-          "order-1 lg:sticky lg:top-16 lg:order-2 lg:h-[calc(100vh-6rem)]",
+          "order-1 min-w-0 lg:sticky lg:top-16 lg:order-2 lg:h-[calc(100vh-6rem)]",
           view === "list" && "hidden md:block",
         )}
       >
-        <div className="h-[60vh] overflow-hidden rounded-lg border border-hairline md:h-[55vh] lg:h-full">
+        <div className="h-[60vh] w-full overflow-hidden rounded-lg border border-hairline md:h-[55vh] lg:h-full">
           {map}
         </div>
       </div>

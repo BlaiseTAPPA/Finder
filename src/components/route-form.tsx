@@ -48,17 +48,17 @@ function PlaceField({ id, label, value, placeholder, onChange, onPick, trailing 
   }, [value, call]);
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <Label htmlFor={id} className="text-caption text-muted-foreground">
         {label}
       </Label>
-      <div className="mt-2 flex gap-2">
+      <div className="mt-2 flex min-w-0 items-center gap-2">
         <Input
           id={id}
           value={value}
           placeholder={placeholder}
           autoComplete="off"
-          className="h-11 rounded-full bg-background"
+          className="h-11 flex-1 min-w-0 rounded-full bg-background"
           onChange={(event) => {
             dirty.current = true;
             onChange(event.target.value);
@@ -128,13 +128,13 @@ export function RouteForm({
 }: Props) {
   return (
     <form
-      className="grid gap-5 rounded-lg border border-hairline bg-pearl p-4 sm:p-5"
+      className="grid min-w-0 gap-5 rounded-lg border border-hairline bg-pearl p-4 sm:p-5"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();
       }}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <PlaceField
           id="trip-origin"
           label="Start"
@@ -170,8 +170,8 @@ export function RouteForm({
         />
       </div>
 
-      <div className="grid items-end gap-5 sm:grid-cols-[1fr_auto]">
-        <div className="space-y-3">
+      <div className="grid min-w-0 items-end gap-5 sm:grid-cols-[1fr_auto]">
+        <div className="min-w-0 space-y-3">
           <div className="flex items-baseline justify-between">
             <Label htmlFor="corridor" className="text-caption text-muted-foreground">
               Korridorbreite
@@ -201,10 +201,10 @@ export function RouteForm({
       </div>
 
       {origin && destination && (
-        <p className="text-fine flex items-center gap-2 text-muted-foreground">
-          <span className="truncate">{origin.label}</span>
+        <p className="text-fine flex min-w-0 items-center gap-2 overflow-hidden text-muted-foreground">
+          <span className="min-w-0 flex-1 truncate">{origin.label}</span>
           <ArrowRight className="size-3 shrink-0" />
-          <span className="truncate">{destination.label}</span>
+          <span className="min-w-0 flex-1 truncate">{destination.label}</span>
         </p>
       )}
     </form>

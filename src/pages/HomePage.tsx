@@ -336,11 +336,11 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background">
       <SiteHeader tab={tab} onTab={setTab} favoritesCount={favorites.favorites.length} />
 
       {/* Hero + Suche */}
-      <section className="bg-parchment">
+      <section className="w-full bg-parchment">
         <div className="mx-auto max-w-3xl px-4 py-8 text-center sm:py-12 lg:py-16">
           <h1 className="text-hero text-ink">Günstig tanken. Ganz in der Nähe.</h1>
           <p className="text-lead mx-auto mt-3 max-w-xl text-ink-muted sm:mt-4">
@@ -362,8 +362,8 @@ export function HomePage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as MainTab)}>
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as MainTab)} className="w-full">
           <TabsList className="mb-5 h-11 w-full rounded-full bg-parchment p-1 sm:mb-6 sm:w-auto">
             <TabsTrigger
               value="search"
@@ -569,12 +569,12 @@ export function HomePage() {
 
             {/* Trajet speichern */}
             {origin && destination && (
-              <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+              <div className="mt-4 grid min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center">
                 <Input
                   value={tripName}
                   onChange={(event) => setTripName(event.target.value)}
                   placeholder="Name, z. B. Zuhause → Arbeit"
-                  className="h-11 rounded-full bg-background sm:w-64"
+                  className="h-11 min-w-0 rounded-full bg-background sm:w-64"
                 />
                 <Button
                   type="button"
