@@ -700,7 +700,14 @@ async function startServer() {
   });
 }
 
-if (!process.env["VERCEL"]) {
+// Start standalone server only when executed directly (not in Vercel or when imported)
+const isDirectExecution =
+  process.argv[1] &&
+  (process.argv[1].endsWith("server.ts") ||
+    process.argv[1].endsWith("server.cjs") ||
+    process.argv[1].endsWith("server.js"));
+
+if (!process.env["VERCEL"] && isDirectExecution) {
   startServer();
 }
 
