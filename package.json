@@ -1,7 +1,6 @@
 {
   "name": "tankstellen-finder",
   "private": true,
-  "sideEffects": false,
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
