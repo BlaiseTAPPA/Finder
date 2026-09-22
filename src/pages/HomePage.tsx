@@ -170,7 +170,15 @@ export function HomePage() {
   const error: ApiErrorShape | null =
     geoError ??
     (listQuery.data && !listQuery.data.ok ? listQuery.data.error : null) ??
-    (listQuery.isError ? { kind: "network", message: "Verbindung fehlgeschlagen." } : null);
+    (listQuery.isError
+      ? {
+          kind: "network",
+          message:
+            listQuery.error instanceof Error
+              ? listQuery.error.message
+              : "Verbindung fehlgeschlagen.",
+        }
+      : null);
 
   const [searching, setSearching] = useState(false);
   const handleSearch = useCallback(

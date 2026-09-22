@@ -44,11 +44,19 @@ export async function fetchApi<T>(
   method: string = "POST",
 ): Promise<T> {
   const headers = await getAuthHeaders();
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch (netErr: unknown) {
+    console.error(`[API Network Error] ${method} ${url}:`, netErr);
+    throw new Error(
+      `Impossible de joindre le serveur (${url}). Vérifiez votre connexion ou le déploiement de l'API.`,
+    );
+  }
 
   if (!res.ok) {
     let errorDetail = "";
@@ -58,6 +66,7 @@ export async function fetchApi<T>(
     } catch {
       errorDetail = await res.text();
     }
+    console.error(`[API Error ${res.status}] ${method} ${url}:`, errorDetail);
     throw new Error(errorDetail || `Request failed with status ${res.status}`);
   }
 
