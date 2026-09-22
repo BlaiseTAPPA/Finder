@@ -422,7 +422,7 @@ app.post("/api/community/statuses", async (req: Request, res: Response) => {
 // -------------------------------------------------------------
 app.get("/api/account/clerk-key", (_req: Request, res: Response) => {
   const publishableKey =
-    process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY || null;
+    process.env["CLERK_PUBLISHABLE_KEY"] || process.env["VITE_CLERK_PUBLISHABLE_KEY"] || null;
   res.json({ publishableKey });
 });
 
@@ -651,7 +651,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 // FRONTEND SERVING (Vite in Dev, Static in Prod)
 // -------------------------------------------------------------
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env["NODE_ENV"] !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -670,7 +670,7 @@ async function startServer() {
   });
 }
 
-if (!process.env.VERCEL) {
+if (!process.env["VERCEL"]) {
   startServer();
 }
 
