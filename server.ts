@@ -1,6 +1,5 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import "./src/lib/env.server";
 
 // Schemas & inputs
@@ -81,6 +80,14 @@ import {
 
 const app = express();
 const PORT = 3000;
+
+// Middleware for serverless environments where Vercel pre-parses JSON bodies
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  if (req.body && typeof req.body === "object") {
+    (req as unknown as { _body?: boolean })._body = true;
+  }
+  next();
+});
 
 app.use(express.json({ limit: "2mb" }));
 
@@ -647,11 +654,26 @@ app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
+// Global Express error handler
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("[Server Error]", err);
+  if (!res.headersSent) {
+    res.status(500).json({
+      ok: false,
+      error: {
+        kind: "internal",
+        message: err instanceof Error ? err.message : "Erreur interne du serveur.",
+      },
+    });
+  }
+});
+
 // -------------------------------------------------------------
 // FRONTEND SERVING (Vite in Dev, Static in Prod)
 // -------------------------------------------------------------
 async function startServer() {
   if (process.env["NODE_ENV"] !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
