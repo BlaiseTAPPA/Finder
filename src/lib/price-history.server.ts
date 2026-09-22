@@ -9,7 +9,7 @@ import type { HistoryPoint } from "./trend";
 const FUELS: FuelType[] = ["e5", "e10", "diesel"];
 
 async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("../integrations/supabase/client.server");
   return supabaseAdmin;
 }
 
@@ -17,7 +17,7 @@ async function admin() {
 export async function upsertSeenStations(stations: Station[]): Promise<void> {
   if (stations.length === 0) return;
   try {
-    const { isServiceRoleKeyValid } = await import("@/integrations/supabase/client.server");
+    const { isServiceRoleKeyValid } = await import("../integrations/supabase/client.server");
     if (!isServiceRoleKeyValid()) {
       // Wenn kein passender Service-Role-Schlüssel konfiguriert ist, Upsert überspringen
       return;

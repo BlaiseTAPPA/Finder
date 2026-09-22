@@ -6,7 +6,7 @@ import type { Station, SavedTrip } from "@/types/station";
 import type { PriceAlert } from "./account-input";
 
 async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("../integrations/supabase/client.server");
   return supabaseAdmin;
 }
 

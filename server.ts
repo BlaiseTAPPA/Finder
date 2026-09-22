@@ -91,6 +91,14 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 
 app.use(express.json({ limit: "2mb" }));
 
+// Serverless URL normalization on Vercel: ensure req.url starts with /api
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  if (process.env["VERCEL"] && req.url && !req.url.startsWith("/api")) {
+    req.url = `/api${req.url.startsWith("/") ? "" : "/"}${req.url}`;
+  }
+  next();
+});
+
 // Helper for extracting Clerk user ID
 async function getAuthUserId(req: Request): Promise<string | null> {
   const token =

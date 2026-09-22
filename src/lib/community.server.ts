@@ -6,7 +6,7 @@ import type { FuelType } from "@/types/station";
 import { WINDOW_HOURS, type Activity } from "./community";
 
 async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("../integrations/supabase/client.server");
   return supabaseAdmin;
 }
 
