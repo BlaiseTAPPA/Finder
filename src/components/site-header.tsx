@@ -40,7 +40,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
               type="button"
               onClick={() => onTab(item.value)}
               className={cn(
-                "text-fine rounded-full px-3 py-1.5 transition-colors",
+                "text-fine rounded-full px-3 py-1.5 transition-colors pointer-coarse:min-h-11",
                 tab === item.value
                   ? "bg-on-dark/15 text-on-dark"
                   : "text-on-dark/60 hover:text-on-dark",
@@ -59,18 +59,18 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
               <Link
                 to="/alerts"
                 aria-label="Preisalarme"
-                className="flex size-11 items-center justify-center rounded-full text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:size-9"
+                className="flex size-11 items-center justify-center rounded-full text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:pointer-fine:size-9"
               >
                 <BellRing className="size-4" />
               </Link>
-              <span className="flex size-11 items-center justify-center md:size-9">
+              <span className="flex size-11 items-center justify-center md:pointer-fine:size-9">
                 <UserButton afterSignOutUrl="/" />
               </span>
             </SignedIn>
             <SignedOut>
               <Link
                 to="/sign-in"
-                className="text-fine flex min-h-11 items-center gap-1.5 rounded-full px-3 text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:min-h-9"
+                className="text-fine flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:pointer-fine:min-h-9"
               >
                 <LogIn className="size-4" />
                 <span className="hidden sm:inline">Anmelden</span>
