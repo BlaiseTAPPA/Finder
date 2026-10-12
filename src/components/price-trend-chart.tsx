@@ -59,7 +59,7 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
 
   return (
     <Dialog open={station !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-xl overflow-hidden sm:w-full">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-xl overflow-x-hidden overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>{station?.name ?? "Preisverlauf"}</DialogTitle>
           <DialogDescription>
