@@ -28,7 +28,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
 
   return (
     <header className="sticky top-0 z-30 bg-ink pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:h-12">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-safe md:h-12">
         <Fuel className="size-4 shrink-0 text-on-dark" />
         <span className="truncate text-caption font-medium text-on-dark">Tankstellen-Finder</span>
 
@@ -40,7 +40,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
               type="button"
               onClick={() => onTab(item.value)}
               className={cn(
-                "text-fine rounded-full px-3 py-1.5 transition-colors",
+                "text-fine rounded-full px-3 py-1.5 transition-colors pointer-coarse:min-h-11",
                 tab === item.value
                   ? "bg-on-dark/15 text-on-dark"
                   : "text-on-dark/60 hover:text-on-dark",
@@ -59,18 +59,18 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
               <Link
                 to="/alerts"
                 aria-label="Preisalarme"
-                className="flex size-11 items-center justify-center rounded-full text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:size-9"
+                className="flex size-11 items-center justify-center rounded-full text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:pointer-fine:size-9"
               >
                 <BellRing className="size-4" />
               </Link>
-              <span className="flex size-11 items-center justify-center md:size-9">
+              <span className="flex size-11 items-center justify-center md:pointer-fine:size-9">
                 <UserButton afterSignOutUrl="/" />
               </span>
             </SignedIn>
             <SignedOut>
               <Link
                 to="/sign-in"
-                className="text-fine flex min-h-11 items-center gap-1.5 rounded-full px-3 text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:min-h-9"
+                className="text-fine flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:pointer-fine:min-h-9"
               >
                 <LogIn className="size-4" />
                 <span className="hidden sm:inline">Anmelden</span>

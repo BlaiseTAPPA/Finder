@@ -167,6 +167,12 @@
   letter-spacing: -0.224px;
 }
 
+/* Horizontal page padding that clears the iPhone notch in landscape (1rem elsewhere) */
+@utility px-safe {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
 @utility text-fine {
   font-size: 0.75rem;
   line-height: 1.3;
@@ -201,4 +207,12 @@
 .leaflet-bar a,
 .leaflet-control-attribution {
   color: var(--ink-muted);
+}
+/* 44px zoom buttons on touch screens (Leaflet's touch default is 30px) */
+@media (pointer: coarse) {
+  .leaflet-container.leaflet-touch .leaflet-bar a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
 }

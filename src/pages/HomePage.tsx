@@ -341,7 +341,7 @@ export function HomePage() {
 
       {/* Hero + Suche */}
       <section className="w-full bg-parchment">
-        <div className="mx-auto max-w-3xl px-4 py-8 text-center sm:py-12 lg:py-16">
+        <div className="mx-auto max-w-3xl px-safe py-8 text-center sm:py-12 lg:py-16">
           <h1 className="text-hero text-ink">Günstig tanken. Ganz in der Nähe.</h1>
           <p className="text-lead mx-auto mt-3 max-w-xl text-ink-muted sm:mt-4">
             Aktuelle Preise für Super E5, E10 und Diesel aus der Tankerkönig-Datenbank.
@@ -362,7 +362,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8">
+      <main className="mx-auto w-full max-w-6xl px-safe py-6 sm:py-8">
         <Tabs value={tab} onValueChange={(v) => setTab(v as MainTab)} className="w-full">
           <TabsList className="mb-5 h-11 w-full rounded-full bg-parchment p-1 sm:mb-6 sm:w-auto">
             <TabsTrigger
@@ -737,7 +737,7 @@ export function HomePage() {
       </main>
 
       <footer className="border-t border-hairline bg-parchment">
-        <div className="text-fine mx-auto max-w-6xl px-4 py-8 text-muted-foreground">
+        <div className="text-fine mx-auto max-w-6xl px-safe pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-muted-foreground">
           Preisdaten:{" "}
           <a
             href="https://creativecommons.tankerkoenig.de/"

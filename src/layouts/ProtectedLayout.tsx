@@ -19,7 +19,7 @@ export function ProtectedLayout() {
 
   if (!isClerkEnabled) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+      <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">
         Authentifizierung ist nicht aktiviert.
       </div>
     );
@@ -27,7 +27,7 @@ export function ProtectedLayout() {
 
   if (!isLoaded || !isSignedIn) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+      <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">
         Konto wird geprüft …
       </div>
     );
