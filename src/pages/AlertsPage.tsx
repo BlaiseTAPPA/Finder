@@ -51,7 +51,7 @@ export function AlertsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="mx-auto max-w-2xl px-safe pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
       <Link
         to="/"
         className="text-fine inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"

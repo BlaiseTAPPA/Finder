@@ -28,7 +28,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
 
   return (
     <header className="sticky top-0 z-30 bg-ink pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:h-12">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-safe md:h-12">
         <Fuel className="size-4 shrink-0 text-on-dark" />
         <span className="truncate text-caption font-medium text-on-dark">Tankstellen-Finder</span>
 
