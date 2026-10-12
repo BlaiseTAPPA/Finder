@@ -208,3 +208,11 @@
 .leaflet-control-attribution {
   color: var(--ink-muted);
 }
+/* 44px zoom buttons on touch screens (Leaflet's touch default is 30px) */
+@media (pointer: coarse) {
+  .leaflet-container.leaflet-touch .leaflet-bar a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+}
