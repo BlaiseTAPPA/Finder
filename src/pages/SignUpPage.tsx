@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { SignUp } from "@clerk/clerk-react";
 import { useIsClerkEnabled } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { touchFriendlyAppearance } from "@/lib/clerk-appearance";
 
 export function SignUpPage() {
   const isClerkEnabled = useIsClerkEnabled();
@@ -19,7 +20,12 @@ export function SignUpPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <SignUp routing="hash" signInUrl="/sign-in" fallbackRedirectUrl="/" />
+      <SignUp
+        routing="hash"
+        signInUrl="/sign-in"
+        fallbackRedirectUrl="/"
+        appearance={touchFriendlyAppearance}
+      />
     </main>
   );
 }
