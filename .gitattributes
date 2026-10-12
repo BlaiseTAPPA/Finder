@@ -1,0 +1,6 @@
+# Always use LF line endings in the working tree (matches Prettier's endOfLine: "lf"),
+# regardless of the core.autocrlf setting on each machine.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
