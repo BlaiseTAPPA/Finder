@@ -65,7 +65,7 @@ export function ConfirmPriceButton({ station, fuel, contributorId, userCoords, o
             <Button
               variant="ghost"
               disabled={disabled}
-              className="h-11 min-w-11 rounded-md px-3 text-ink-2 shadow-none hover:bg-surface-sunken hover:text-foreground"
+              className="min-w-11 px-3 text-ink-2"
               onClick={(event) => {
                 event.stopPropagation();
                 void handleClick();

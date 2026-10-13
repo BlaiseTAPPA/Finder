@@ -18,13 +18,13 @@ export function RouteFavoritesBar({ trips, onSelect, onRemove }: Props) {
       {trips.map((trip) => (
         <span
           key={trip.id}
-          className="flex max-w-full items-center rounded-full border border-hairline bg-background pr-1"
+          className="flex max-w-full items-center rounded-full border bg-surface pr-1"
         >
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="text-caption min-h-11 max-w-[200px] truncate rounded-full px-3 text-ink hover:bg-parchment"
+            className="text-caption max-w-[200px] truncate rounded-full px-3 text-foreground"
             onClick={() => onSelect(trip)}
           >
             <RouteIcon className="size-3.5 shrink-0 text-primary" />

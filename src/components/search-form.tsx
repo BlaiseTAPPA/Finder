@@ -2,7 +2,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, MapPin, Search } from "lucide-react";
+import { ArrowRight, Loader2, LocateFixed, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -32,32 +32,42 @@ export function SearchForm({ onSearch, onLocate, searching, locating }: Props) {
       noValidate
     >
       <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="relative flex-1 min-w-0">
-          <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-3" />
           <Input
             {...form.register("query")}
             placeholder="Ort oder Postleitzahl"
             aria-label="Ort oder Postleitzahl"
-            className="h-12 rounded-full border-input bg-background pl-11 text-caption"
+            className="h-12 pr-12 pl-10 sm:pr-3"
           />
-        </div>
-        <div className="flex gap-2">
+          {/* Mobil: Absenden direkt im Feld, damit "Standort" die Hauptaktion sein kann */}
           <Button
             type="submit"
+            variant="ghost"
+            size="icon"
+            aria-label="Suchen"
             disabled={searching}
-            className="h-12 flex-1 rounded-full px-6 sm:flex-none"
+            className="absolute top-0.5 right-0.5 text-primary sm:hidden"
           >
-            {searching ? <Loader2 className="size-4 animate-spin" /> : "Suchen"}
+            {searching ? <Loader2 className="animate-spin" /> : <ArrowRight />}
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={searching} className="hidden h-12 px-6 sm:inline-flex">
+            {searching ? <Loader2 className="animate-spin" /> : "Suchen"}
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={onLocate}
             disabled={locating}
-            className="h-12 flex-1 rounded-full px-5 text-primary sm:flex-none"
+            className="h-12 flex-1 px-5 max-sm:border-transparent max-sm:bg-primary max-sm:text-primary-foreground max-sm:hover:bg-primary/90 max-sm:hover:text-primary-foreground sm:flex-none"
           >
-            {locating ? <Loader2 className="size-4 animate-spin" /> : <MapPin className="size-4" />}
-            <span className="ml-1 hidden min-[380px]:inline">Standort</span>
+            {locating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
+            <span>
+              <span className="sm:hidden">Meinen </span>Standort
+              <span className="sm:hidden"> verwenden</span>
+            </span>
           </Button>
         </div>
       </div>

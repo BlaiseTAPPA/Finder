@@ -70,7 +70,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
               variant="ghost"
               size="icon"
               aria-label="Menü öffnen"
-              className="size-11 shrink-0 text-on-chrome hover:bg-on-chrome/10 hover:text-on-chrome md:hidden"
+              className="shrink-0 rounded-full text-on-chrome hover:bg-on-chrome/10 hover:text-on-chrome md:hidden"
             >
               <Menu className="size-5" />
             </Button>
@@ -91,8 +91,8 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
                   className={cn(
                     "text-caption flex min-h-11 items-center gap-3 rounded-lg px-3 text-left transition-colors",
                     tab === item.value
-                      ? "bg-parchment font-semibold text-ink"
-                      : "text-ink-muted hover:bg-parchment",
+                      ? "bg-surface-sunken font-semibold text-foreground"
+                      : "text-ink-2 hover:bg-surface-sunken",
                   )}
                 >
                   <item.icon className="size-4 text-primary" />

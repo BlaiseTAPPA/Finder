@@ -72,8 +72,7 @@ export function StationCard({
 }: Props) {
   const price = station.prices[fuel];
   const others = FUEL_TYPES.filter((type) => type !== fuel);
-  const ghostAction =
-    "h-11 min-w-11 rounded-md px-3 text-ink-2 shadow-none hover:bg-surface-sunken hover:text-foreground";
+  const ghostAction = "min-w-11 px-3 text-ink-2";
 
   return (
     <Card
@@ -81,7 +80,7 @@ export function StationCard({
       onMouseLeave={() => onHover?.(null)}
       onClick={() => onSelect?.(station.id)}
       className={cn(
-        "relative cursor-pointer gap-0 overflow-hidden rounded-md border-border bg-surface p-4 shadow-none transition-colors sm:p-5",
+        "cursor-pointer gap-0 bg-surface p-4 transition-colors sm:p-5",
         "hover:border-border-strong",
         active && "border-border-strong bg-surface-sunken/60",
       )}
@@ -150,14 +149,7 @@ export function StationCard({
 
       {/* Signale: nur Ausnahmen und Kontext */}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 empty:hidden">
-        {!station.isOpen && (
-          <Badge
-            variant="outline"
-            className="text-fine rounded-full border-0 bg-destructive/10 px-2.5 py-1 font-medium text-destructive"
-          >
-            Geschlossen
-          </Badge>
-        )}
+        {!station.isOpen && <Badge variant="negative">Geschlossen</Badge>}
         <TrendBadge trend={trend} />
         <CommunityTrustBadge status={community?.status} />
         {detour && (
@@ -175,7 +167,7 @@ export function StationCard({
       <div className="@container mt-3 border-t border-border pt-3">
         <div className="flex items-center gap-1">
           <Button
-            className="h-11 flex-1 rounded-md shadow-none"
+            className="flex-1"
             onClick={(event) => {
               event.stopPropagation();
               window.open(directionsUrl(station), "_blank", "noopener,noreferrer");

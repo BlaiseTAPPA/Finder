@@ -12,10 +12,10 @@ const LABELS = {
   high: "Preis hoch",
 } as const;
 
-const STYLES = {
-  low: "bg-price-low/12 text-price-low",
-  mid: "bg-price-mid/14 text-ink-2",
-  high: "bg-price-high/10 text-price-high",
+const VARIANTS = {
+  low: "positive",
+  mid: "caution",
+  high: "negative",
 } as const;
 
 export function TrendBadge({ trend }: { trend: TrendSummary | undefined }) {
@@ -26,13 +26,7 @@ export function TrendBadge({ trend }: { trend: TrendSummary | undefined }) {
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-fine cursor-help rounded-full border-0 px-2.5 py-1 font-medium",
-              STYLES[kind],
-            )}
-          >
+          <Badge variant={VARIANTS[kind]} className="cursor-help">
             {LABELS[kind]}
           </Badge>
         </TooltipTrigger>

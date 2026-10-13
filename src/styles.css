@@ -6,8 +6,6 @@
  * Design system — "road-sign utility".
  * Price first, color carries meaning (one role per hue), hairline borders over shadows,
  * compact rhythm with a 44px touch floor. Components use semantic tokens only.
- * Legacy names (parchment, pearl, hairline, ink-muted, on-dark) are aliases kept
- * while components migrate; do not use them in new code.
  */
 
 @theme inline {
@@ -59,18 +57,8 @@
   --color-chrome: var(--chrome);
   --color-on-chrome: var(--on-chrome);
 
-  /* legacy aliases */
-  --color-hairline: var(--border);
-  --color-parchment: var(--surface-sunken);
-  --color-pearl: var(--surface-sunken);
-  --color-ink: var(--foreground);
-  --color-ink-muted: var(--ink-2);
-  --color-tile-dark: var(--chrome);
-  --color-on-dark: var(--on-chrome);
-
   /* the only elevation: floating layers (popover, dropdown, map popup) */
   --shadow-float: 0 4px 16px -4px oklch(0 0 0 / 0.18);
-  --shadow-tile: var(--shadow-float);
 }
 
 :root {
@@ -194,20 +182,7 @@
   }
 }
 
-/* ---- Type scale (6 steps + hero, retired in P1-3) ---- */
-
-@utility text-hero {
-  font-size: clamp(1.75rem, 5vw, 2.5rem);
-  font-weight: 650;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
-}
-
-@utility text-lead {
-  font-size: clamp(1rem, 2vw, 1.125rem);
-  font-weight: 400;
-  line-height: 1.45;
-}
+/* ---- Type scale ---- */
 
 @utility text-title {
   font-size: 1.25rem;
@@ -285,6 +260,10 @@
 }
 .leaflet-popup-content {
   margin: 12px 14px;
+}
+/* Route line + corridor: stroke from the token, so it follows the color scheme */
+.leaflet-container path.route-line {
+  stroke: var(--route);
 }
 .leaflet-bar a {
   background: var(--surface);

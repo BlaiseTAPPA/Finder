@@ -58,7 +58,7 @@ function PlaceField({ id, label, value, placeholder, onChange, onPick, trailing 
           value={value}
           placeholder={placeholder}
           autoComplete="off"
-          className="h-11 flex-1 min-w-0 rounded-full bg-background"
+          className="min-w-0 flex-1"
           onChange={(event) => {
             dirty.current = true;
             onChange(event.target.value);
@@ -70,12 +70,12 @@ function PlaceField({ id, label, value, placeholder, onChange, onPick, trailing 
       </div>
 
       {open && items.length > 0 && (
-        <ul className="absolute z-40 mt-1 max-h-56 w-full overflow-y-auto overscroll-contain rounded-lg border border-hairline bg-background shadow-tile">
+        <ul className="absolute z-40 mt-1 max-h-56 w-full overflow-y-auto overscroll-contain rounded-md border bg-popover shadow-float">
           {items.map((item) => (
             <li key={`${item.lat},${item.lng},${item.label}`}>
               <button
                 type="button"
-                className="text-caption min-h-11 w-full px-4 py-2.5 text-left text-ink hover:bg-parchment"
+                className="text-caption min-h-11 w-full px-4 py-2.5 text-left text-foreground hover:bg-surface-sunken"
                 onMouseDown={(event) => {
                   event.preventDefault();
                   dirty.current = false;
@@ -128,7 +128,7 @@ export function RouteForm({
 }: Props) {
   return (
     <form
-      className="grid min-w-0 gap-5 rounded-lg border border-hairline bg-pearl p-4 sm:p-5"
+      className="grid min-w-0 gap-5 rounded-md border bg-surface p-4 sm:p-5"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();
@@ -148,7 +148,7 @@ export function RouteForm({
               variant="outline"
               size="icon"
               aria-label="Aktuellen Standort als Start verwenden"
-              className="size-11 shrink-0 rounded-full"
+              className="shrink-0"
               onClick={onLocate}
               disabled={locating}
             >
@@ -176,7 +176,7 @@ export function RouteForm({
             <Label htmlFor="corridor" className="text-caption text-muted-foreground">
               Korridorbreite
             </Label>
-            <span className="num text-caption font-semibold text-ink">
+            <span className="num text-caption font-semibold text-foreground">
               ± {corridorKm.toFixed(1).replace(".", ",")} km
             </span>
           </div>
@@ -192,7 +192,7 @@ export function RouteForm({
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-full px-6 sm:h-11 sm:w-auto"
+          className="h-12 w-full px-6 sm:h-11 sm:w-auto"
           disabled={searching || !origin || !destination}
         >
           {searching ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}

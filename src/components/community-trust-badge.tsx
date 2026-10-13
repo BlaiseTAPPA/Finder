@@ -5,7 +5,6 @@
 import { AlertTriangle, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import type { CommunityStatus } from "@/lib/community";
 
 export function relativeTime(iso: string | null): string {
@@ -26,14 +25,8 @@ export function CommunityTrustBadge({ status }: { status: CommunityStatus | unde
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-fine cursor-help gap-1 rounded-full border-0 px-2.5 py-1 font-medium",
-              confirmed ? "bg-success/12 text-success" : "bg-destructive/10 text-destructive",
-            )}
-          >
-            <Icon aria-hidden className="size-3.5" />
+          <Badge variant={confirmed ? "positive" : "negative"} className="cursor-help">
+            <Icon aria-hidden />
             {confirmed ? "Kürzlich bestätigt" : "Preis angezweifelt"}
           </Badge>
         </TooltipTrigger>

@@ -15,7 +15,7 @@ export function RadiusSlider({ value, onChange, onCommit }: Props) {
         <Label htmlFor="radius" className="text-caption text-muted-foreground">
           Umkreis
         </Label>
-        <span className="num text-caption font-semibold text-ink">{value} km</span>
+        <span className="num text-caption font-semibold text-foreground">{value} km</span>
       </div>
       <Slider
         id="radius"

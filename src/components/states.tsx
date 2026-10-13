@@ -8,11 +8,11 @@ export function StationSkeletons({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, index) => (
-        <Card key={index} className="gap-0 rounded-lg border-hairline p-4 shadow-none sm:p-5">
+        <Card key={index} className="gap-0 bg-surface p-4 sm:p-5">
           <Skeleton className="h-5 w-2/5" />
           <Skeleton className="mt-2 h-4 w-3/5" />
           <Skeleton className="mt-4 h-6 w-24 rounded-full" />
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-hairline pt-4">
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
             <Skeleton className="h-12" />
             <Skeleton className="h-12" />
             <Skeleton className="h-12" />
@@ -35,9 +35,9 @@ function Notice({
   children?: React.ReactNode;
 }) {
   return (
-    <Card className="items-center gap-0 rounded-lg border-hairline bg-pearl p-6 text-center shadow-none sm:p-10">
+    <Card className="items-center gap-0 rounded-lg border-border bg-surface-sunken p-6 text-center shadow-none sm:p-10">
       <div className="text-muted-foreground">{icon}</div>
-      <h3 className="mt-4 text-lg font-semibold text-ink sm:text-[21px]">{title}</h3>
+      <h3 className="mt-4 text-title text-foreground">{title}</h3>
       <p className="text-caption mt-2 max-w-sm text-muted-foreground">{description}</p>
       {children && <div className="mt-5">{children}</div>}
     </Card>

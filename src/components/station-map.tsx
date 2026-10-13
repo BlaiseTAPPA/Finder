@@ -19,23 +19,34 @@ import { Button } from "@/components/ui/button";
 import { directionsUrl, formatDistance, formatPrice } from "@/lib/format";
 import { FUEL_LABELS, type Coords, type FuelType, type Station } from "@/types/station";
 
-/** Grün (günstig) bis Rot (teuer) für die Trajet-Ansicht. */
-function priceColor(rank: number): string {
-  const hue = 130 - Math.max(0, Math.min(1, rank)) * 130;
-  return `hsl(${hue} 62% 42%)`;
+/** Dieselbe 3-stufige Preisskala wie die Badges: günstig / mittel / teuer. */
+function priceColor(rank: number | undefined): string {
+  if (rank === undefined) return "var(--ink-3)";
+  if (rank <= 1 / 3) return "var(--price-low)";
+  if (rank <= 2 / 3) return "var(--price-mid)";
+  return "var(--price-high)";
 }
 
-/** Schlichter Pin im Design-System-Blau; hervorgehoben = größer + gefüllt. */
-function pin(highlighted: boolean, cheapest: boolean, color?: string) {
+/** Rang 0 (günstigste) … 1 (teuerste) der gewählten Sorte; Stationen ohne Preis fehlen. */
+function rankByPrice(stations: Station[], fuel: FuelType): Map<string, number> {
+  const priced = stations.filter((s) => s.prices[fuel] !== null);
+  const values = priced.map((s) => s.prices[fuel]!);
+  const min = Math.min(...values);
+  const span = Math.max(...values) - min;
+  return new Map(priced.map((s) => [s.id, span > 0 ? (s.prices[fuel]! - min) / span : 0]));
+}
+
+/** Pin in Preisfarbe (Design-Tokens, folgt dem Farbschema); hervorgehoben = größer + gefüllt. */
+function pin(highlighted: boolean, cheapest: boolean, color: string) {
   const size = highlighted ? 34 : 26;
-  const stroke = color ?? "#0066cc";
-  const fill = cheapest || highlighted ? stroke : "#ffffff";
-  const dot = cheapest || highlighted ? "#ffffff" : stroke;
+  const filled = cheapest || highlighted;
+  const fill = filled ? color : "var(--surface)";
+  const dot = filled ? "var(--surface)" : color;
   return L.divIcon({
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${fill};border:2px solid ${stroke};box-shadow:0 2px 10px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center"><span style="width:${size / 4}px;height:${size / 4}px;border-radius:9999px;background:${dot}"></span></div>`,
+    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${fill};border:2px solid ${color};box-shadow:var(--shadow-float);display:flex;align-items:center;justify-content:center"><span style="width:${size / 4}px;height:${size / 4}px;border-radius:9999px;background:${dot}"></span></div>`,
   });
 }
 
@@ -110,6 +121,12 @@ export default function StationMap({
   const coarsePointer =
     typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 
+  // Trajet liefert den Rang mit; in der Umkreissuche wird er hier für die Pinfarbe ermittelt.
+  const ranks = useMemo(
+    () => priceRank ?? rankByPrice(stations, fuel),
+    [priceRank, stations, fuel],
+  );
+
   const line = useMemo(
     () => (routeLine ?? []).map((p) => [p.lat, p.lng] as [number, number]),
     [routeLine],
@@ -145,13 +162,16 @@ export default function StationMap({
           <Polyline
             positions={line}
             pathOptions={{
-              color: "#0066cc",
+              className: "route-line",
               opacity: 0.12,
               weight: Math.min(60, Math.max(12, (corridorKm ?? 2) * 9)),
               lineCap: "round",
             }}
           />
-          <Polyline positions={line} pathOptions={{ color: "#0066cc", opacity: 0.9, weight: 4 }} />
+          <Polyline
+            positions={line}
+            pathOptions={{ className: "route-line", opacity: 0.9, weight: 4 }}
+          />
         </>
       )}
 
@@ -162,7 +182,7 @@ export default function StationMap({
           icon={pin(
             station.id === activeId,
             station.id === cheapestId,
-            priceRank ? priceColor(priceRank.get(station.id) ?? 0.5) : undefined,
+            priceColor(ranks.get(station.id)),
           )}
           eventHandlers={{
             click: () => onSelect?.(station.id),
@@ -171,19 +191,20 @@ export default function StationMap({
           }}
         >
           <Popup maxWidth={260} minWidth={180} autoPanPadding={[16, 16]}>
-            <div style={{ maxWidth: 240 }}>
-              <strong style={{ fontSize: 14 }}>{station.name}</strong>
-              <div style={{ fontSize: 12, color: "#7a7a7a", marginTop: 2 }}>
-                {station.brand} · {formatDistance(station.dist)} ·{" "}
-                {station.isOpen ? "geöffnet" : "geschlossen"}
+            <div className="max-w-60">
+              <div className="text-fine text-ink-2">{FUEL_LABELS[fuel]}</div>
+              <div className="price-display mt-0.5 text-xl leading-none text-foreground">
+                {formatPrice(station.prices[fuel])}
               </div>
-              <div style={{ fontSize: 15, fontWeight: 600, marginTop: 8 }}>
-                {FUEL_LABELS[fuel]}: {formatPrice(station.prices[fuel])}
+              <div className="text-caption mt-2 font-semibold text-foreground">{station.name}</div>
+              <div className="text-fine text-ink-2">
+                {station.brand} · {formatDistance(station.dist)}
+                {station.isOpen ? "" : " · geschlossen"}
               </div>
               <Button
                 type="button"
                 variant="link"
-                className="mt-2 h-auto p-0 text-[13px]"
+                className="text-caption mt-2 h-auto p-0"
                 onClick={(event) => {
                   event.stopPropagation();
                   window.open(directionsUrl(station), "_blank", "noopener,noreferrer");

@@ -96,7 +96,7 @@ export function ReportPriceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Preis melden</DialogTitle>
           <DialogDescription>
@@ -109,7 +109,7 @@ export function ReportPriceDialog({
           <div className="space-y-1.5">
             <Label htmlFor="report-fuel">Kraftstoff</Label>
             <Select value={fuelType} onValueChange={(v) => setFuelType(v as FuelType)}>
-              <SelectTrigger id="report-fuel" className="min-h-11">
+              <SelectTrigger id="report-fuel">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -130,7 +130,6 @@ export function ReportPriceDialog({
               placeholder="z. B. 1,749"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="min-h-11"
             />
           </div>
 
@@ -161,18 +160,10 @@ export function ReportPriceDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="ghost"
-            className="min-h-11 rounded-full"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Abbrechen
           </Button>
-          <Button
-            className="min-h-11 rounded-full"
-            disabled={pending || !contributorId}
-            onClick={() => void submit()}
-          >
+          <Button disabled={pending || !contributorId} onClick={() => void submit()}>
             {pending && <Loader2 className="size-4 animate-spin" />}
             Meldung senden
           </Button>

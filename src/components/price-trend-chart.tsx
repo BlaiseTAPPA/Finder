@@ -71,7 +71,7 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
 
   return (
     <Dialog open={station !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-xl overflow-x-hidden overflow-y-auto sm:w-full">
+      <DialogContent className="overflow-x-hidden sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{station?.name ?? "Preisverlauf"}</DialogTitle>
           <DialogDescription>
@@ -83,12 +83,12 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
           value={String(rangeDays)}
           onValueChange={(value) => setRangeDays(Number(value) as HistoryRange)}
         >
-          <TabsList className="h-11 w-full rounded-full bg-parchment p-1 sm:w-auto">
+          <TabsList className="w-full sm:w-auto">
             {HISTORY_RANGES.map((range) => (
               <TabsTrigger
                 key={range}
                 value={String(range)}
-                className="text-caption flex-1 rounded-full px-3 sm:flex-none sm:px-4"
+                className="flex-1 sm:flex-none sm:px-4"
               >
                 {range} Tage
               </TabsTrigger>
@@ -100,7 +100,7 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
           {query.isPending && station !== null ? (
             <Skeleton className="h-full w-full rounded-lg" />
           ) : query.isError ? (
-            <div className="text-caption flex h-full flex-col items-center justify-center gap-2 rounded-lg bg-parchment px-6 text-center text-muted-foreground">
+            <div className="text-caption flex h-full flex-col items-center justify-center gap-2 rounded-lg bg-surface-sunken px-6 text-center text-muted-foreground">
               <span>Der Preisverlauf konnte nicht geladen werden.</span>
               <button
                 type="button"
@@ -111,7 +111,7 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
               </button>
             </div>
           ) : points.length < MIN_POINTS ? (
-            <div className="text-caption flex h-full flex-col items-center justify-center gap-2 rounded-lg bg-parchment px-6 text-center text-muted-foreground">
+            <div className="text-caption flex h-full flex-col items-center justify-center gap-2 rounded-lg bg-surface-sunken px-6 text-center text-muted-foreground">
               <span>Nicht genügend Daten für diesen Zeitraum.</span>
               <span className="text-fine">
                 Der Verlauf entsteht laufend – schau in ein paar Tagen wieder vorbei.
