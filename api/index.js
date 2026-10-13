@@ -1356,50 +1356,71 @@ async function upsertProfile(clerkUserId, username, avatarUrl) {
     { onConflict: "clerk_user_id" }
   );
 }
+function check(error, what) {
+  if (error) throw new Error(`${what}: ${error.message}`);
+}
 async function listFavorites(clerkUserId) {
   const db = await admin3();
-  const { data } = await db.from("user_favorites").select("station").eq("clerk_user_id", clerkUserId).order("created_at", { ascending: false });
+  const { data, error } = await db.from("user_favorites").select("station").eq("clerk_user_id", clerkUserId).order("created_at", { ascending: false });
+  check(error, "listFavorites");
   return (data ?? []).map((row) => row.station);
 }
 async function addFavorite(clerkUserId, station) {
+  await addFavorites(clerkUserId, [station]);
+}
+async function addFavorites(clerkUserId, stations) {
+  const unique = [...new Map(stations.map((s) => [s.id, s])).values()];
+  if (unique.length === 0) return;
   const db = await admin3();
-  await db.from("user_favorites").upsert(
-    {
+  const { error } = await db.from("user_favorites").upsert(
+    unique.map((station) => ({
       clerk_user_id: clerkUserId,
       station_id: station.id,
       station
-    },
+    })),
     { onConflict: "clerk_user_id,station_id" }
   );
+  check(error, "addFavorites");
 }
 async function removeFavorite(clerkUserId, stationId2) {
   const db = await admin3();
-  await db.from("user_favorites").delete().eq("clerk_user_id", clerkUserId).eq("station_id", stationId2);
+  const { error } = await db.from("user_favorites").delete().eq("clerk_user_id", clerkUserId).eq("station_id", stationId2);
+  check(error, "removeFavorite");
 }
 async function listTrips(clerkUserId) {
   const db = await admin3();
-  const { data } = await db.from("user_trips").select("trip").eq("clerk_user_id", clerkUserId).order("created_at", { ascending: false });
+  const { data, error } = await db.from("user_trips").select("trip").eq("clerk_user_id", clerkUserId).order("created_at", { ascending: false });
+  check(error, "listTrips");
   return (data ?? []).map((row) => row.trip);
 }
 async function addTrip(clerkUserId, trip) {
+  await addTrips(clerkUserId, [trip]);
+}
+async function addTrips(clerkUserId, trips) {
+  const unique = [...new Map(trips.map((t) => [t.name, t])).values()];
+  if (unique.length === 0) return;
   const db = await admin3();
-  await db.from("user_trips").upsert(
-    {
+  const { error } = await db.from("user_trips").upsert(
+    unique.map((trip) => ({
       clerk_user_id: clerkUserId,
       name: trip.name,
       trip
-    },
+    })),
     { onConflict: "clerk_user_id,name" }
   );
+  check(error, "addTrips");
 }
 async function removeTrip(clerkUserId, tripId) {
   const db = await admin3();
-  const { data } = await db.from("user_trips").select("id, trip").eq("clerk_user_id", clerkUserId);
-  const match = (data ?? []).find(
-    (row) => row.trip?.id === tripId
-  );
-  if (!match) return;
-  await db.from("user_trips").delete().eq("id", match.id);
+  const { error } = await db.from("user_trips").delete().eq("clerk_user_id", clerkUserId).eq("trip->>id", tripId);
+  check(error, "removeTrip");
+}
+async function syncLocalAccountData(clerkUserId, input) {
+  await upsertProfile(clerkUserId, input.username, input.avatarUrl);
+  await Promise.all([
+    addFavorites(clerkUserId, input.favorites),
+    addTrips(clerkUserId, input.trips)
+  ]);
 }
 async function listAlerts(clerkUserId) {
   const db = await admin3();
@@ -1797,13 +1818,12 @@ app.post("/api/account/sync", async (req, res) => {
   }
   try {
     const data = syncSchema.parse(req.body);
-    await upsertProfile(userId, data.username ?? null, data.avatarUrl ?? null);
-    for (const station of data.favorites) {
-      await addFavorite(userId, station);
-    }
-    for (const trip of data.trips) {
-      await addTrip(userId, trip);
-    }
+    await syncLocalAccountData(userId, {
+      favorites: data.favorites,
+      trips: data.trips,
+      username: data.username ?? null,
+      avatarUrl: data.avatarUrl ?? null
+    });
     res.json({ ok: true });
   } catch (error) {
     console.error("[account/sync] Erreur :", error);

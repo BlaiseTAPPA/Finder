@@ -4,6 +4,7 @@ import {
   useAuth as useClerkAuth,
   useUser as useClerkUser,
 } from "@clerk/clerk-react";
+import { useAccountSync } from "./favorites";
 
 export interface SafeAuthState {
   isLoaded: boolean;
@@ -60,6 +61,16 @@ const AuthContext = createContext<AuthContextValue>({
 function ClerkBridge({ children }: { children: ReactNode }) {
   const clerkAuth = useClerkAuth();
   const clerkUser = useClerkUser();
+
+  // Favoriten und Trajets bei An-/Abmeldung mit dem Konto abgleichen.
+  useAccountSync({
+    isLoaded: clerkAuth.isLoaded && clerkUser.isLoaded,
+    userId: clerkAuth.isSignedIn ? (clerkAuth.userId ?? null) : null,
+    profile: {
+      username: clerkUser.user?.username ?? clerkUser.user?.fullName ?? null,
+      avatarUrl: clerkUser.user?.imageUrl ?? null,
+    },
+  });
 
   const value = useMemo<AuthContextValue>(
     () => ({
