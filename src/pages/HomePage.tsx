@@ -36,6 +36,7 @@ import { RouteFavoritesBar } from "@/components/route-favorites-bar";
 import type { CardDetour } from "@/components/station-card";
 import { ResultsLayout } from "@/components/results-layout";
 import { SiteHeader, type MainTab } from "@/components/site-header";
+import { DataCredits } from "@/components/data-credits";
 import { cn } from "@/lib/utils";
 
 import { EmptyState, ErrorState, Notice, StartState, StationSkeletons } from "@/components/states";
@@ -396,9 +397,7 @@ export function HomePage() {
       <section className="w-full border-b border-border bg-surface">
         <div className="mx-auto max-w-6xl px-safe py-4 sm:py-6">
           <h1 className="text-title text-foreground">Günstig tanken. Ganz in der Nähe.</h1>
-          <p className="text-caption mt-1 text-ink-2">
-            Live-Preise für Super E5, E10 und Diesel · Quelle: Tankerkönig
-          </p>
+          <p className="text-caption mt-1 text-ink-2">Live-Preise für Super E5, E10 und Diesel</p>
           <div className="mt-4 max-w-2xl">
             <SearchForm
               onSearch={handleSearch}
@@ -770,19 +769,9 @@ export function HomePage() {
         </Tabs>
       </main>
 
-      <footer className="border-t border-border bg-surface-sunken">
-        <div className="text-fine mx-auto max-w-6xl px-safe pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-muted-foreground">
-          Preisdaten:{" "}
-          <a
-            href="https://creativecommons.tankerkoenig.de/"
-            target="_blank"
-            rel="noreferrer"
-            className="text-primary"
-          >
-            Tankerkönig
-          </a>{" "}
-          (CC BY 4.0) · Kartendaten © OpenStreetMap-Mitwirkende · Angaben ohne Gewähr.
-        </div>
+      {/* Nur ab md; auf Mobil stehen die Quellenhinweise im Menü. */}
+      <footer className="hidden border-t border-border bg-surface-sunken md:block">
+        <DataCredits className="text-fine mx-auto max-w-6xl px-safe pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-muted-foreground" />
       </footer>
 
       <ReportPriceDialog
