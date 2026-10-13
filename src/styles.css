@@ -244,34 +244,61 @@
   padding-right: max(1rem, env(safe-area-inset-right));
 }
 
-/* Leaflet chrome kept quiet and on-brand */
+/*
+ * Leaflet chrome on tokens. leaflet.css loads after this file and hardcodes white
+ * surfaces, so every override is scoped under .leaflet-container to win on specificity
+ * (otherwise dark mode puts light text on a white popup).
+ */
 .leaflet-container {
   font-family: var(--font-sans);
   background: var(--surface-sunken);
 }
-.leaflet-popup-content-wrapper {
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-float);
-}
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
+.leaflet-container .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup-tip {
   background: var(--surface);
   color: var(--foreground);
+  box-shadow: var(--shadow-float);
 }
-.leaflet-popup-content {
+.leaflet-container .leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.leaflet-container .leaflet-popup-content {
   margin: 12px 14px;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--ink-3);
+}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+  color: var(--foreground);
+}
+.leaflet-container .leaflet-bar {
+  box-shadow: var(--shadow-float);
+}
+.leaflet-container .leaflet-bar a {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+.leaflet-container .leaflet-bar a:hover,
+.leaflet-container .leaflet-bar a:focus {
+  background-color: var(--surface-sunken);
+}
+.leaflet-container .leaflet-bar a.leaflet-disabled {
+  background-color: var(--surface-sunken);
+  color: var(--ink-3);
+}
+.leaflet-container .leaflet-control-attribution {
+  background: color-mix(in oklch, var(--surface) 85%, transparent);
+  color: var(--ink-2);
+}
+.leaflet-container .leaflet-control-attribution a {
+  color: var(--primary);
 }
 /* Route line + corridor: stroke from the token, so it follows the color scheme */
 .leaflet-container path.route-line {
   stroke: var(--route);
-}
-.leaflet-bar a {
-  background: var(--surface);
-  border-color: var(--border);
-}
-.leaflet-bar a,
-.leaflet-control-attribution {
-  color: var(--ink-2);
 }
 /* 44px zoom buttons on touch screens (Leaflet's touch default is 30px) */
 @media (pointer: coarse) {
