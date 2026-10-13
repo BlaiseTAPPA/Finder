@@ -67,7 +67,7 @@ export function StartState({ children }: { children?: React.ReactNode }) {
     <Notice
       icon={<MapPinOff />}
       title="Wo möchtest du tanken?"
-      description="Erlaube den Standortzugriff oder gib einen Ort bzw. eine Postleitzahl ein, um Preise in deiner Nähe zu vergleichen."
+      description="Suche oben nach Ort oder Postleitzahl – oder nutze deinen Standort."
     >
       {children}
     </Notice>

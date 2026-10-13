@@ -12,13 +12,18 @@ interface Props {
   list: ReactNode;
   map: ReactNode;
   className?: string | undefined;
+  /** Mobiler Liste/Karte-Umschalter; ausblenden, solange es nichts umzuschalten gibt. */
+  showToggle?: boolean | undefined;
 }
 
 const TOGGLE =
   "rounded-full px-5 data-[state=active]:bg-on-chrome data-[state=active]:text-chrome data-[state=active]:shadow-none";
 
-export function ResultsLayout({ list, map, className }: Props) {
+export function ResultsLayout({ list, map, className, showToggle = true }: Props) {
   const [view, setView] = useState<"list" | "map">("list");
+
+  // Ohne Umschalter immer die Liste zeigen (sonst bliebe eine leere Karte stehen).
+  const shownView = showToggle ? view : "list";
 
   // Leaflet berechnet seine Größe nur bei sichtbarem Container neu.
   useEffect(() => {
@@ -33,14 +38,14 @@ export function ResultsLayout({ list, map, className }: Props) {
         className,
       )}
     >
-      <div className={cn("order-2 min-w-0 lg:order-1", view === "map" && "hidden md:block")}>
+      <div className={cn("order-2 min-w-0 lg:order-1", shownView === "map" && "hidden md:block")}>
         {list}
       </div>
 
       <div
         className={cn(
           "order-1 min-w-0 lg:sticky lg:top-16 lg:order-2 lg:h-[calc(100vh-6rem)]",
-          view === "list" && "hidden md:block",
+          shownView === "list" && "hidden md:block",
         )}
       >
         <div className="isolate h-[60vh] w-full overflow-hidden rounded-md border md:h-[55vh] lg:h-full">
@@ -49,7 +54,12 @@ export function ResultsLayout({ list, map, className }: Props) {
       </div>
 
       {/* Mobil: schwebender Umschalter, klebt am unteren Rand solange die Ergebnisse sichtbar sind */}
-      <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 order-3 justify-self-center md:hidden">
+      <div
+        className={cn(
+          "sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 order-3 justify-self-center md:hidden",
+          !showToggle && "hidden",
+        )}
+      >
         <Tabs value={view} onValueChange={(v) => setView(v as "list" | "map")}>
           <TabsList className="h-12 rounded-full bg-chrome p-1 text-on-chrome/70 shadow-float">
             <TabsTrigger value="list" className={TOGGLE}>
