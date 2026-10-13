@@ -20,23 +20,30 @@ import { PriceFigure } from "@/components/price-figure";
 import { directionsUrl, formatDistance } from "@/lib/format";
 import { FUEL_LABELS, type Coords, type FuelType, type Station } from "@/types/station";
 
-/** Kartenstil je Farbschema: OSM-Standard hell, CARTO "Dark Matter" (OSM-Daten) dunkel. */
-const TILES = {
-  light: {
-    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende',
-    subdomains: "abc",
-    maxZoom: 19,
-  },
-  dark: {
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: "abcd",
-    maxZoom: 20,
-  },
-} as const;
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende';
+
+/**
+ * Kartenstil je Farbschema. Freie Dunkel-Kacheln ohne Schlüssel gibt es nicht mehr
+ * (CARTO liefert nur noch "API KEY REQUIRED"). Ohne Konfiguration werden daher im
+ * Dunkelmodus die OSM-Kacheln abgedunkelt; mit VITE_MAP_DARK_TILES_URL (+ _ATTRIBUTION)
+ * wird ein echter Dunkel-Stil eines Anbieters mit Schlüssel genutzt (z. B. MapTiler, Stadia).
+ */
+const env = import.meta.env as Record<string, string | undefined>;
+const DARK_URL = env["VITE_MAP_DARK_TILES_URL"]?.trim() || null;
+const DARK_ATTRIBUTION = env["VITE_MAP_DARK_TILES_ATTRIBUTION"]?.trim() || OSM_ATTRIBUTION;
+
+const OSM_TILES = {
+  url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution: OSM_ATTRIBUTION,
+  className: "",
+};
+
+function tilesFor(dark: boolean) {
+  if (!dark) return OSM_TILES;
+  if (DARK_URL) return { url: DARK_URL, attribution: DARK_ATTRIBUTION, className: "" };
+  return { ...OSM_TILES, className: "tiles-dimmed" };
+}
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
@@ -151,7 +158,7 @@ export default function StationMap({
     [stations, activeId],
   );
 
-  const tiles = TILES[usePrefersDark() ? "dark" : "light"];
+  const tiles = tilesFor(usePrefersDark());
 
   // Nur im Browser ausgewertet (Komponente wird ausschließlich clientseitig geladen).
   const coarsePointer =
@@ -180,13 +187,13 @@ export default function StationMap({
     >
       {/* Zoom-Buttons unten rechts, außerhalb der Daumenzone am unteren Rand. */}
       <ZoomControl position="bottomright" />
-      {/* key: Attribution ist in Leaflet nicht nachträglich änderbar, daher neu montieren. */}
+      {/* key: Attribution und Klasse sind in Leaflet nicht nachträglich änderbar → neu montieren. */}
       <TileLayer
-        key={tiles.url}
+        key={`${tiles.url}|${tiles.className}`}
         url={tiles.url}
         attribution={tiles.attribution}
-        subdomains={tiles.subdomains}
-        maxZoom={tiles.maxZoom}
+        className={tiles.className}
+        maxZoom={19}
       />
       {line.length > 1 ? (
         <RouteSync line={routeLine!} />

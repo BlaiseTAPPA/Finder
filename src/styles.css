@@ -267,10 +267,10 @@
 
 /*
  * Leaflet chrome on tokens. leaflet.css loads after this file and hardcodes white
- * surfaces, so every override is scoped under .leaflet-container to win on specificity
- * (otherwise dark mode puts light text on a white popup).
+ * surfaces, so every override must out-rank its selector: scoped under .leaflet-container,
+ * and with the class doubled where Leaflet already uses that exact selector.
  */
-.leaflet-container {
+.leaflet-container.leaflet-container {
   font-family: var(--font-sans);
   background: var(--surface-sunken);
 }
@@ -287,11 +287,11 @@
 .leaflet-container .leaflet-popup-content {
   margin: 12px 14px;
 }
-.leaflet-container a.leaflet-popup-close-button {
+.leaflet-container.leaflet-container a.leaflet-popup-close-button {
   color: var(--ink-3);
 }
-.leaflet-container a.leaflet-popup-close-button:hover,
-.leaflet-container a.leaflet-popup-close-button:focus {
+.leaflet-container.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container.leaflet-container a.leaflet-popup-close-button:focus {
   color: var(--foreground);
 }
 .leaflet-container .leaflet-bar {
@@ -310,11 +310,11 @@
   background-color: var(--surface-sunken);
   color: var(--ink-3);
 }
-.leaflet-container .leaflet-control-attribution {
+.leaflet-container.leaflet-container .leaflet-control-attribution {
   background: color-mix(in oklch, var(--surface) 85%, transparent);
   color: var(--ink-2);
 }
-.leaflet-container .leaflet-control-attribution a {
+.leaflet-container.leaflet-container .leaflet-control-attribution a {
   color: var(--primary);
 }
 /* Route line + corridor: stroke from the token, so it follows the color scheme */
@@ -328,4 +328,9 @@
     height: 44px;
     line-height: 44px;
   }
+}
+
+/* Dark mode without a keyed dark tile provider: dim the OSM tiles (see station-map.tsx). */
+.tiles-dimmed {
+  filter: brightness(0.7) contrast(1.1) saturate(0.8);
 }
