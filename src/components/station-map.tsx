@@ -3,7 +3,7 @@
  * Wird nur im Browser geladen (React.lazy hinter <ClientOnly>),
  * da Leaflet beim Import auf `window` zugreift.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import L from "leaflet";
 import {
   MapContainer,
@@ -19,6 +19,39 @@ import { Button } from "@/components/ui/button";
 import { PriceFigure } from "@/components/price-figure";
 import { directionsUrl, formatDistance } from "@/lib/format";
 import { FUEL_LABELS, type Coords, type FuelType, type Station } from "@/types/station";
+
+/** Kartenstil je Farbschema: OSM-Standard hell, CARTO "Dark Matter" (OSM-Daten) dunkel. */
+const TILES = {
+  light: {
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende',
+    subdomains: "abc",
+    maxZoom: 19,
+  },
+  dark: {
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 20,
+  },
+} as const;
+
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+/** Folgt dem System-Farbschema live (wie styles.css), damit Karte und UI zusammenpassen. */
+function usePrefersDark(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia(DARK_QUERY);
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(DARK_QUERY).matches,
+    () => false,
+  );
+}
 
 /** Dieselbe 3-stufige Preisskala wie die Badges: günstig / mittel / teuer. */
 function priceColor(rank: number | undefined): string {
@@ -118,6 +151,8 @@ export default function StationMap({
     [stations, activeId],
   );
 
+  const tiles = TILES[usePrefersDark() ? "dark" : "light"];
+
   // Nur im Browser ausgewertet (Komponente wird ausschließlich clientseitig geladen).
   const coarsePointer =
     typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
@@ -145,10 +180,13 @@ export default function StationMap({
     >
       {/* Zoom-Buttons unten rechts, außerhalb der Daumenzone am unteren Rand. */}
       <ZoomControl position="bottomright" />
+      {/* key: Attribution ist in Leaflet nicht nachträglich änderbar, daher neu montieren. */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={19}
+        key={tiles.url}
+        url={tiles.url}
+        attribution={tiles.attribution}
+        subdomains={tiles.subdomains}
+        maxZoom={tiles.maxZoom}
       />
       {line.length > 1 ? (
         <RouteSync line={routeLine!} />
