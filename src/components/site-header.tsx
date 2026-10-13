@@ -1,6 +1,6 @@
 /** Kopfleiste: Marke, Konto und Menü-Sheet auf Mobile (Bereichs-Tabs liegen in der Seite). */
 import { useState } from "react";
-import { BellRing, Fuel, LogIn, Menu, Route as RouteIcon, Star, Target } from "lucide-react";
+import { BellRing, LogIn, Menu, Route as RouteIcon, Star, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import { useIsClerkEnabled } from "@/lib/auth";
@@ -29,8 +29,10 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
   return (
     <header className="sticky top-0 z-30 bg-chrome pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-safe md:h-12">
-        <Fuel className="size-4 shrink-0 text-on-chrome" />
-        <span className="truncate text-caption font-medium text-on-chrome">Tankstellen-Finder</span>
+        {/* Wortmarke in der Ziffernschrift der Preise statt Stock-Icon */}
+        <span className="text-body truncate font-figure font-semibold text-on-chrome">
+          Tankstellen<span className="text-on-chrome/55">-Finder</span>
+        </span>
 
         {/* Bereichswahl übernimmt die Tab-Leiste der Seite; hier nur Konto + Mobil-Menü. */}
         <div className="flex-1" />

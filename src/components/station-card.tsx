@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { directionsUrl, formatDistance, formatPrice } from "@/lib/format";
+import { PriceFigure } from "@/components/price-figure";
+import { directionsUrl, formatDistance } from "@/lib/format";
 import { TrendBadge, TrendHint } from "@/components/trend-badge";
 import { DetourBadge } from "@/components/detour-badge";
 import { CommunityTrustBadge } from "@/components/community-trust-badge";
@@ -95,7 +96,7 @@ export function StationCard({
           <p
             className={cn("text-price-xl mt-1", price === null ? "text-ink-3" : "text-foreground")}
           >
-            {formatPrice(price)}
+            <PriceFigure value={price} />
           </p>
         </div>
 
@@ -141,7 +142,7 @@ export function StationCard({
                 station.prices[type] === null ? "text-ink-3" : "text-ink-2",
               )}
             >
-              {formatPrice(station.prices[type])}
+              <PriceFigure value={station.prices[type]} />
             </dd>
           </div>
         ))}

@@ -16,7 +16,8 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
-import { directionsUrl, formatDistance, formatPrice } from "@/lib/format";
+import { PriceFigure } from "@/components/price-figure";
+import { directionsUrl, formatDistance } from "@/lib/format";
 import { FUEL_LABELS, type Coords, type FuelType, type Station } from "@/types/station";
 
 /** Dieselbe 3-stufige Preisskala wie die Badges: günstig / mittel / teuer. */
@@ -194,7 +195,7 @@ export default function StationMap({
             <div className="max-w-60">
               <div className="text-fine text-ink-2">{FUEL_LABELS[fuel]}</div>
               <div className="price-display mt-0.5 text-xl leading-none text-foreground">
-                {formatPrice(station.prices[fuel])}
+                <PriceFigure value={station.prices[fuel]} />
               </div>
               <div className="text-caption mt-2 font-semibold text-foreground">{station.name}</div>
               <div className="text-fine text-ink-2">

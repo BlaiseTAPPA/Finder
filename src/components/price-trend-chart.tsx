@@ -15,6 +15,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { PriceFigure } from "@/components/price-figure";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPriceHistory } from "@/lib/trend.functions";
@@ -145,9 +146,7 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
                       formatter={(value) => (
                         <div className="flex w-full items-center justify-between gap-3">
                           <span className="text-muted-foreground">Ø {FUEL_LABELS[fuel]}</span>
-                          <span className="font-medium text-foreground tabular-nums">
-                            {formatPrice(Number(value))}
-                          </span>
+                          <PriceFigure value={Number(value)} className="text-foreground" />
                         </div>
                       )}
                     />

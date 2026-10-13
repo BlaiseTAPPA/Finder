@@ -9,13 +9,18 @@ export function StationSkeletons({ count = 4 }: { count?: number }) {
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, index) => (
         <Card key={index} className="gap-0 bg-surface p-4 sm:p-5">
-          <Skeleton className="h-5 w-2/5" />
-          <Skeleton className="mt-2 h-4 w-3/5" />
-          <Skeleton className="mt-4 h-6 w-24 rounded-full" />
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
-            <Skeleton className="h-12" />
-            <Skeleton className="h-12" />
-            <Skeleton className="h-12" />
+          <div className="flex items-start justify-between">
+            <div>
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="mt-2 h-7 w-28" />
+            </div>
+            <Skeleton className="h-5 w-14" />
+          </div>
+          <Skeleton className="mt-4 h-4 w-3/5" />
+          <Skeleton className="mt-1.5 h-3.5 w-4/5" />
+          <Skeleton className="mt-3 h-3.5 w-2/5" />
+          <div className="mt-4 border-t pt-3">
+            <Skeleton className="h-11 w-full rounded-md" />
           </div>
         </Card>
       ))}
@@ -23,31 +28,34 @@ export function StationSkeletons({ count = 4 }: { count?: number }) {
   );
 }
 
-function Notice({
+/** Einheitlicher Hinweisblock für Start-, Leer- und Fehlerzustände: kompakt, linksbündig. */
+export function Notice({
   icon,
   title,
   description,
   children,
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   title: string;
   description: string;
   children?: React.ReactNode;
 }) {
   return (
-    <Card className="items-center gap-0 rounded-lg border-border bg-surface-sunken p-6 text-center shadow-none sm:p-10">
-      <div className="text-muted-foreground">{icon}</div>
-      <h3 className="mt-4 text-title text-foreground">{title}</h3>
-      <p className="text-caption mt-2 max-w-sm text-muted-foreground">{description}</p>
-      {children && <div className="mt-5">{children}</div>}
-    </Card>
+    <div className="flex gap-3 rounded-md border bg-surface p-4 sm:p-5">
+      {icon && <div className="mt-px shrink-0 text-ink-3 [&_svg]:size-5">{icon}</div>}
+      <div className="min-w-0">
+        <h3 className="text-body font-semibold text-foreground">{title}</h3>
+        <p className="text-caption mt-1 max-w-prose text-ink-2">{description}</p>
+        {children && <div className="mt-4">{children}</div>}
+      </div>
+    </div>
   );
 }
 
 export function EmptyState({ radius }: { radius: number }) {
   return (
     <Notice
-      icon={<SearchX className="size-7" />}
+      icon={<SearchX />}
       title="Keine Tankstellen gefunden"
       description={`Im Umkreis von ${radius} km wurden keine Stationen gemeldet. Erhöhe den Radius oder suche einen anderen Ort.`}
     />
@@ -57,7 +65,7 @@ export function EmptyState({ radius }: { radius: number }) {
 export function StartState({ children }: { children?: React.ReactNode }) {
   return (
     <Notice
-      icon={<MapPinOff className="size-7" />}
+      icon={<MapPinOff />}
       title="Wo möchtest du tanken?"
       description="Erlaube den Standortzugriff oder gib einen Ort bzw. eine Postleitzahl ein, um Preise in deiner Nähe zu vergleichen."
     >
@@ -68,28 +76,18 @@ export function StartState({ children }: { children?: React.ReactNode }) {
 
 export function ErrorState({ error }: { error: ApiErrorShape }) {
   if (error.kind === "quota") {
-    return (
-      <Notice
-        icon={<Timer className="size-7" />}
-        title="Anfragelimit erreicht"
-        description={error.message}
-      />
-    );
+    return <Notice icon={<Timer />} title="Anfragelimit erreicht" description={error.message} />;
   }
   if (error.kind === "missing-key") {
     return (
       <Notice
-        icon={<KeyRound className="size-7" />}
+        icon={<KeyRound />}
         title="API-Schlüssel fehlt"
         description="Für die Live-Preise wird ein Tankerkönig-API-Schlüssel benötigt. Bitte TANKERKOENIG_API_KEY hinterlegen."
       />
     );
   }
   return (
-    <Notice
-      icon={<AlertTriangle className="size-7" />}
-      title="Daten nicht verfügbar"
-      description={error.message}
-    />
+    <Notice icon={<AlertTriangle />} title="Daten nicht verfügbar" description={error.message} />
   );
 }

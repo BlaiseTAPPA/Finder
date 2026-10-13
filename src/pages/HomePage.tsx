@@ -6,7 +6,15 @@ import { ClientOnly } from "@/components/ClientOnly";
 import { useServerFn } from "@/lib/server-fn-client";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshCw, Route as RouteIcon, Save, SlidersHorizontal, Star, Target } from "lucide-react";
+import {
+  RefreshCw,
+  Route as RouteIcon,
+  Save,
+  SearchX,
+  SlidersHorizontal,
+  Star,
+  Target,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +38,7 @@ import { ResultsLayout } from "@/components/results-layout";
 import { SiteHeader, type MainTab } from "@/components/site-header";
 import { cn } from "@/lib/utils";
 
-import { EmptyState, ErrorState, StartState, StationSkeletons } from "@/components/states";
+import { EmptyState, ErrorState, Notice, StartState, StationSkeletons } from "@/components/states";
 import { useFavorites } from "@/lib/favorites";
 import { useTripFavorites } from "@/lib/route-favorites";
 import { useGeolocation } from "@/lib/geolocation";
@@ -628,13 +636,11 @@ export function HomePage() {
                     !routeQuery.isFetching &&
                     routeResult &&
                     routeStationList.length === 0 && (
-                      <div className="rounded-lg border border-border bg-surface-sunken p-10 text-center">
-                        <h3 className="text-title text-foreground">Keine Stationen im Korridor</h3>
-                        <p className="text-caption mt-2 text-muted-foreground">
-                          Erhöhe die Korridorbreite, um mehr Tankstellen entlang der Strecke zu
-                          finden.
-                        </p>
-                      </div>
+                      <Notice
+                        icon={<SearchX />}
+                        title="Keine Stationen im Korridor"
+                        description="Erhöhe die Korridorbreite, um mehr Tankstellen entlang der Strecke zu finden."
+                      />
                     )}
                   {!routeError && !routeQuery.isFetching && routeStationList.length > 0 && (
                     <StationList
@@ -655,16 +661,11 @@ export function HomePage() {
                     />
                   )}
                   {!routeQueryInput && !routeError && (
-                    <div className="rounded-lg border border-border bg-surface-sunken p-10 text-center">
-                      <RouteIcon className="mx-auto size-7 text-muted-foreground" />
-                      <h3 className="mt-4 text-title text-foreground">
-                        Tanken entlang deiner Strecke
-                      </h3>
-                      <p className="text-caption mt-2 text-muted-foreground">
-                        Gib Start und Ziel ein – wir zeigen die günstigsten Stationen im Korridor
-                        samt geschätztem Umweg.
-                      </p>
-                    </div>
+                    <Notice
+                      icon={<RouteIcon />}
+                      title="Tanken entlang deiner Strecke"
+                      description="Gib Start und Ziel ein – wir zeigen die günstigsten Stationen im Korridor samt geschätztem Umweg."
+                    />
                   )}
                 </>
               }
@@ -703,13 +704,11 @@ export function HomePage() {
             {!favorites.hydrated ? (
               <StationSkeletons count={2} />
             ) : favorites.favorites.length === 0 ? (
-              <div className="rounded-lg border border-border bg-surface-sunken p-10 text-center">
-                <Star className="mx-auto size-7 text-muted-foreground" />
-                <h3 className="mt-4 text-title text-foreground">Noch keine Favoriten</h3>
-                <p className="text-caption mt-2 text-muted-foreground">
-                  Tippe auf den Stern einer Station, um sie hier dauerhaft zu speichern.
-                </p>
-              </div>
+              <Notice
+                icon={<Star />}
+                title="Noch keine Favoriten"
+                description="Tippe auf den Stern einer Station, um sie hier dauerhaft zu speichern."
+              />
             ) : (
               <StationList
                 stations={favorites.favorites}
