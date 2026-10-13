@@ -1,11 +1,19 @@
 import { fetchApi } from "./server-fn-client";
-import type { HistoryInput, SummariesInput, TrendInput } from "./trend-input";
-import type { HistoryPoint, TrendResult } from "./trend";
+import {
+  historyInputSchema,
+  type DailyPricePoint,
+  type HistoryInput,
+  type HistoryRange,
+  type SummariesInput,
+  type TrendInput,
+} from "./trend-input";
+import type { TrendResult } from "./trend";
 
 export interface HistoryResult {
-  points: HistoryPoint[];
+  /** Ein Punkt je Tag, aufsteigend; Tage ohne Daten fehlen. */
+  points: DailyPricePoint[];
   avg: number | null;
-  days: number;
+  rangeDays: HistoryRange;
 }
 
 export interface TrendSummary {
@@ -20,9 +28,9 @@ export interface TrendSummary {
   avg: number | null;
 }
 
-/** Verlaufspunkte für das Diagramm (7/14/30 Tage). */
+/** Tagesreihe für das Diagramm (7/15/30 Tage); Eingabe wird vorab validiert. */
 export async function getPriceHistory(args: { data: HistoryInput }): Promise<HistoryResult> {
-  return fetchApi<HistoryResult>("/api/trends/history", args.data);
+  return fetchApi<HistoryResult>("/api/trends/history", historyInputSchema.parse(args.data));
 }
 
 /** Trend, Klassifizierung und Empfehlung. */
