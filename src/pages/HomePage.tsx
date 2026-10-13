@@ -348,7 +348,7 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-background">
+    <div className="min-h-screen w-full overflow-x-clip bg-background">
       <SiteHeader tab={tab} onTab={setTab} favoritesCount={favorites.favorites.length} />
 
       {/* Hero + Suche */}
