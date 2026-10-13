@@ -1,17 +1,7 @@
-/** Preisverlauf einer Station als Liniendiagramm (7/14/30 Tage) im Dialog. */
+/** Preisverlauf einer Station als Tagesreihe (7/15/30 Tage) im Dialog. */
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@/lib/server-fn-client";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip as ChartTooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from "recharts";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPriceHistory } from "@/lib/trend.functions";
@@ -32,30 +28,46 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-const dayFormat = new Intl.DateTimeFormat("de-DE", {
+/** Mindestens zwei Tage, damit eine Linie entsteht. */
+const MIN_POINTS = 2;
+
+// Tageswerte sind Kalendertage (YYYY-MM-DD) – in UTC parsen und formatieren,
+// damit die lokale Zeitzone das Datum nicht verschiebt.
+const parseDay = (date: string) => new Date(`${date}T12:00:00Z`);
+const axisDay = new Intl.DateTimeFormat("de-DE", {
   day: "2-digit",
   month: "2-digit",
+  timeZone: "UTC",
 });
-const timeFormat = new Intl.DateTimeFormat("de-DE", {
+const tooltipDay = new Intl.DateTimeFormat("de-DE", {
+  weekday: "short",
   day: "2-digit",
   month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const axisPrice = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
-  const [days, setDays] = useState<HistoryRange>(7);
-  const fetchHistory = useServerFn(getPriceHistory);
+  const [rangeDays, setRangeDays] = useState<HistoryRange>(7);
 
   const query = useQuery({
-    queryKey: ["price-history", station?.id, fuel, days],
+    queryKey: ["price-history", station?.id, fuel, rangeDays],
     enabled: station !== null,
     staleTime: 5 * 60 * 1000,
-    queryFn: () => fetchHistory({ data: { stationId: station!.id, fuelType: fuel, days } }),
+    queryFn: () => getPriceHistory({ data: { stationId: station!.id, fuelType: fuel, rangeDays } }),
   });
 
   const points = query.data?.points ?? [];
   const avg = query.data?.avg ?? null;
+  const chartConfig = {
+    price: { label: FUEL_LABELS[fuel], color: "var(--color-primary)" },
+  } satisfies ChartConfig;
 
   return (
     <Dialog open={station !== null} onOpenChange={onOpenChange}>
@@ -63,13 +75,13 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>{station?.name ?? "Preisverlauf"}</DialogTitle>
           <DialogDescription>
-            Preisverlauf für {FUEL_LABELS[fuel]} · Datenerhebung alle 20 Minuten
+            Tagesdurchschnitt für {FUEL_LABELS[fuel]} · Datenerhebung alle 20 Minuten
           </DialogDescription>
         </DialogHeader>
 
         <Tabs
-          value={String(days)}
-          onValueChange={(value) => setDays(Number(value) as HistoryRange)}
+          value={String(rangeDays)}
+          onValueChange={(value) => setRangeDays(Number(value) as HistoryRange)}
         >
           <TabsList className="h-11 w-full rounded-full bg-parchment p-1 sm:w-auto">
             {HISTORY_RANGES.map((range) => (
@@ -84,42 +96,62 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
           </TabsList>
         </Tabs>
 
-        <div className="h-56 w-full sm:h-72">
-          {query.isLoading ? (
+        <div className="h-56 w-full sm:h-72" aria-busy={query.isFetching}>
+          {query.isPending && station !== null ? (
             <Skeleton className="h-full w-full rounded-lg" />
-          ) : points.length < 2 ? (
+          ) : query.isError ? (
             <div className="text-caption flex h-full flex-col items-center justify-center gap-2 rounded-lg bg-parchment px-6 text-center text-muted-foreground">
-              <span>Noch nicht genug Daten für diese Station.</span>
+              <span>Der Preisverlauf konnte nicht geladen werden.</span>
+              <button
+                type="button"
+                onClick={() => void query.refetch()}
+                className="text-fine min-h-11 px-3 font-medium text-primary hover:underline"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+          ) : points.length < MIN_POINTS ? (
+            <div className="text-caption flex h-full flex-col items-center justify-center gap-2 rounded-lg bg-parchment px-6 text-center text-muted-foreground">
+              <span>Nicht genügend Daten für diesen Zeitraum.</span>
               <span className="text-fine">
                 Der Verlauf entsteht laufend – schau in ein paar Tagen wieder vorbei.
               </span>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="currentColor"
-                  className="text-border"
-                />
+            <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
+              <LineChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 4 }}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="t"
-                  type="number"
-                  domain={["dataMin", "dataMax"]}
-                  tickFormatter={(value: number) => dayFormat.format(new Date(value))}
-                  tick={{ fontSize: 11 }}
-                  minTickGap={40}
+                  dataKey="date"
+                  tickFormatter={(value: string) => axisDay.format(parseDay(value))}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={24}
                   interval="preserveStartEnd"
                 />
                 <YAxis
                   domain={["dataMin - 0.02", "dataMax + 0.02"]}
-                  tickFormatter={(value: number) => value.toFixed(2)}
-                  tick={{ fontSize: 11 }}
-                  width={48}
+                  tickFormatter={(value: number) => axisPrice.format(value)}
+                  tickLine={false}
+                  axisLine={false}
+                  width={64}
                 />
                 <ChartTooltip
-                  labelFormatter={(value) => timeFormat.format(new Date(Number(value)))}
-                  formatter={(value) => [formatPrice(Number(value)), FUEL_LABELS[fuel]]}
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(value) => tooltipDay.format(parseDay(String(value)))}
+                      formatter={(value) => (
+                        <div className="flex w-full items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Ø {FUEL_LABELS[fuel]}</span>
+                          <span className="font-medium text-foreground tabular-nums">
+                            {formatPrice(Number(value))}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  }
                 />
                 {avg !== null && (
                   <ReferenceLine
@@ -128,21 +160,23 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
                     strokeDasharray="4 4"
                     className="text-muted-foreground"
                     label={{
-                      value: `Ø ${avg.toFixed(3)}`,
+                      value: `Ø ${formatPrice(avg)}`,
                       fontSize: 11,
                       position: "insideTopRight",
                     }}
                   />
                 )}
                 <Line
-                  type="stepAfter"
+                  type="monotone"
                   dataKey="price"
-                  stroke="var(--color-primary)"
+                  stroke="var(--color-price)"
                   strokeWidth={2}
-                  dot={false}
+                  dot={points.length <= 15}
+                  activeDot={{ r: 4 }}
+                  isAnimationActive={false}
                 />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           )}
         </div>
 

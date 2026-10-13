@@ -1,5 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import path from "path";
+import { ZodError } from "zod";
+import { waitUntil } from "@vercel/functions";
 import "./src/lib/env.server";
 
 // Schemas & inputs
@@ -37,6 +39,7 @@ import {
   upsertSeenStations,
   readHistory,
   readHistoryBulk,
+  getStationPriceHistory,
   diffRows,
   insertHistoryRows,
   lastKnownPrices,
@@ -117,8 +120,12 @@ app.post("/api/stations/list", async (req: Request, res: Response) => {
     const stations = await fetchStations(data);
 
     if (stations.length > 0) {
-      upsertSeenStations(stations).catch((err) =>
-        console.warn("[DB] Enregistrement d'historique ignoré :", err?.message || err),
+      // waitUntil : sur Vercel, la fonction reste active jusqu'à la fin de
+      // l'écriture, sans retarder la réponse (sinon elle est gelée et perdue).
+      waitUntil(
+        upsertSeenStations(stations).catch((err) =>
+          console.warn("[DB] Enregistrement d'historique ignoré :", err?.message || err),
+        ),
       );
     }
 
@@ -211,8 +218,10 @@ app.post("/api/routes/stations", async (req: Request, res: Response) => {
     const route = await planRouteServer(data.origin, data.destination);
     const stations = await collectRouteStations(route, data.corridorKm, data.fuelType);
 
-    upsertSeenStations(stations.map((entry) => entry.station)).catch((err) =>
-      console.warn("[route] upsertSeenStations übersprungen:", err?.message || err),
+    waitUntil(
+      upsertSeenStations(stations.map((entry) => entry.station)).catch((err) =>
+        console.warn("[route] upsertSeenStations übersprungen:", err?.message || err),
+      ),
     );
 
     res.json({ ok: true, route, stations, fetchedAt: Date.now() });
@@ -245,15 +254,19 @@ app.post("/api/routes/suggest", async (req: Request, res: Response) => {
 app.post("/api/trends/history", async (req: Request, res: Response) => {
   try {
     const data = historyInputSchema.parse(req.body);
-    const points = await readHistory(data.stationId, data.fuelType, data.days);
+    const points = await getStationPriceHistory(data.stationId, data.fuelType, data.rangeDays);
     const avg =
       points.length > 0
         ? Math.round((points.reduce((sum, p) => sum + p.price, 0) / points.length) * 1000) / 1000
         : null;
-    res.json({ points, avg, days: data.days });
+    res.json({ points, avg, rangeDays: data.rangeDays });
   } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ error: "Ungültige Eingabe" });
+      return;
+    }
     console.error("[trends/history] Erreur :", error);
-    res.json({ points: [], avg: null, days: req.body?.days ?? 7 });
+    res.status(500).json({ error: "Preisverlauf nicht verfügbar" });
   }
 });
 
@@ -648,7 +661,18 @@ const runPriceCollection = async () => {
   }
 };
 
-app.all("/api/public/cron/collect-prices", async (_req: Request, res: Response) => {
+app.all("/api/public/cron/collect-prices", async (req: Request, res: Response) => {
+  // Si CRON_SECRET est défini, seul l'appelant planifié (pg_cron) peut déclencher la collecte.
+  const cronSecret = process.env["CRON_SECRET"];
+  if (cronSecret) {
+    const provided =
+      (req.headers["x-cron-secret"] as string | undefined) ??
+      req.headers["authorization"]?.replace(/^Bearer\s+/i, "");
+    if (provided !== cronSecret) {
+      res.status(401).json({ ok: false, error: "unauthorized" });
+      return;
+    }
+  }
   try {
     const result = await runPriceCollection();
     res.json(result);
