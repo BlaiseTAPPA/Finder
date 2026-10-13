@@ -7,6 +7,7 @@ import { useIsClerkEnabled } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { DataCredits } from "@/components/data-credits";
 
 export type MainTab = "search" | "trip" | "favorites";
 
@@ -103,6 +104,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
                 </button>
               ))}
             </div>
+            <DataCredits className="text-fine absolute inset-x-0 bottom-0 border-t px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-muted-foreground" />
           </SheetContent>
         </Sheet>
       </div>
