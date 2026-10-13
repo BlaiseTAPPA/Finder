@@ -107,3 +107,4 @@ export const geocodeInputSchema = z.object({
 
 export type ListInput = z.infer<typeof listInputSchema>;
 export type PricesInput = z.infer<typeof pricesInputSchema>;
+export type GeocodeInput = z.input<typeof geocodeInputSchema>;
