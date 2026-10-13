@@ -38,6 +38,8 @@ export const statusesInputSchema = z.object({
 });
 
 export type ReportInput = z.infer<typeof reportInputSchema>;
+export type StatusInput = z.input<typeof statusInputSchema>;
+export type StatusesInput = z.input<typeof statusesInputSchema>;
 export type ConfirmInput = z.infer<typeof confirmInputSchema>;
 
 /** Ergebnis einer Beitrags-Aktion (nie ein geworfener Fehler für Fachfälle). */

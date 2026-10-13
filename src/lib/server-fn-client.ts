@@ -73,6 +73,11 @@ export async function fetchApi<T>(
   return res.json() as Promise<T>;
 }
 
-export function useServerFn<T extends (...args: unknown[]) => unknown>(fn: T): T {
+/*
+ * Parameter als never[]: Mit unknown[] erfüllt keine Funktion mit typisierten Parametern
+ * die Einschränkung (Parameter sind kontravariant), TypeScript fällt auf die Einschränkung
+ * zurück und der Rückgabetyp geht verloren – Ursache der meisten tsc-Fehler in den Seiten.
+ */
+export function useServerFn<T extends (...args: never[]) => unknown>(fn: T): T {
   return fn;
 }

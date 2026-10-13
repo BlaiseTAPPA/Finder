@@ -71,8 +71,12 @@ export interface RouteStation {
 /** Sortiermodi der Trajet-Ansicht. */
 export type RouteSortMode = "best" | "price" | "detour";
 
-/** Ein gespeicherter Trajet (localStorage). */
-export interface SavedTrip {
+/**
+ * Ein gespeicherter Trajet (localStorage).
+ * Bewusst ein type-Alias statt interface: nur so ist er dem .passthrough()-Schema
+ * (Index-Signatur) zuweisbar, das Trajets an den Server schickt.
+ */
+export type SavedTrip = {
   id: string;
   name: string;
   originLabel: string;
@@ -81,7 +85,7 @@ export interface SavedTrip {
   destination: Coords;
   corridorKm: number;
   createdAt: number;
-}
+};
 
 /** Vollständige Adresse als eine Zeile. */
 export function formatAddress(station: Station): string {

@@ -24,3 +24,4 @@ export const suggestInputSchema = z.object({
 
 export type PlanRouteInput = z.infer<typeof planRouteInputSchema>;
 export type RouteStationsInput = z.infer<typeof routeStationsInputSchema>;
+export type SuggestInput = z.input<typeof suggestInputSchema>;

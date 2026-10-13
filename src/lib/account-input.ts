@@ -59,6 +59,13 @@ export const toggleAlertSchema = z.object({
   active: z.boolean(),
 });
 
+/* Eingabetypen für die Client-Aufrufe: z.input, damit Felder mit .default() optional bleiben. */
+export type SetFavoriteInput = z.input<typeof setFavoriteSchema>;
+export type SaveTripInput = z.input<typeof saveTripSchema>;
+export type SyncInput = z.input<typeof syncSchema>;
+export type UpsertAlertInput = z.input<typeof upsertAlertSchema>;
+export type ToggleAlertInput = z.input<typeof toggleAlertSchema>;
+
 export interface PriceAlert {
   id: string;
   stationId: string;

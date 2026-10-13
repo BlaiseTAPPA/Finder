@@ -315,8 +315,7 @@ export function HomePage() {
     queryKey: ["favorite-prices", favoriteIds],
     enabled: center === null && favoriteIds.length > 0,
     staleTime: 5 * 60 * 1000,
-    // Direkt statt über useServerFn aufgerufen: dessen Signatur verliert den Rückgabetyp.
-    queryFn: () => refreshPrices({ data: { ids: favoriteIds } }),
+    queryFn: () => callPrices({ data: { ids: favoriteIds } }),
   });
   useEffect(() => {
     if (favoritePricesQuery.data?.ok) favorites.syncPrices(favoritePricesQuery.data.updates);
