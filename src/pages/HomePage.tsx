@@ -43,6 +43,7 @@ import { useFavorites } from "@/lib/favorites";
 import { useTripFavorites } from "@/lib/route-favorites";
 import { useGeolocation } from "@/lib/geolocation";
 import { cheapestStationId, formatRelativeTime } from "@/lib/format";
+import { loadSearchSession, saveSearchSession } from "@/lib/search-session";
 import { geocodePlace, listStations, refreshPrices } from "@/lib/stations.functions";
 import { routeStations } from "@/lib/route.functions";
 import { getTrendSummaries, type TrendSummary } from "@/lib/trend.functions";
@@ -71,35 +72,75 @@ const PAGE_TAB =
   "text-body -mb-px h-11 flex-none rounded-none border-b-2 border-transparent px-0.5 font-medium text-ink-2 hover:text-foreground data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none";
 
 export function HomePage() {
-  const [center, setCenter] = useState<Coords | null>(null);
-  const [placeLabel, setPlaceLabel] = useState<string | null>(null);
-  const [radius, setRadius] = useState(5);
-  const [committedRadius, setCommittedRadius] = useState(5);
-  const [fuel, setFuel] = useState<FuelType>("e5");
-  const [sort, setSort] = useState<SortMode>("price");
+  // Suche der laufenden Sitzung wiederherstellen (z. B. nach Preisalarme → zurück).
+  const [restored] = useState(loadSearchSession);
+
+  const [center, setCenter] = useState<Coords | null>(restored?.center ?? null);
+  const [placeLabel, setPlaceLabel] = useState<string | null>(restored?.placeLabel ?? null);
+  const [radius, setRadius] = useState(restored?.radius ?? 5);
+  const [committedRadius, setCommittedRadius] = useState(restored?.radius ?? 5);
+  const [fuel, setFuel] = useState<FuelType>(restored?.fuel ?? "e5");
+  const [sort, setSort] = useState<SortMode>(restored?.sort ?? "price");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [geoError, setGeoError] = useState<ApiErrorShape | null>(null);
   const [trendStation, setTrendStation] = useState<Station | null>(null);
   const [reportStation, setReportStation] = useState<Station | null>(null);
 
   // ----- reine UI-Zustände (Responsive) -----
-  const [tab, setTab] = useState<MainTab>("search");
+  const [tab, setTab] = useState<MainTab>(restored?.tab ?? "search");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ----- Trajet-Ansicht -----
-  const [origin, setOrigin] = useState<TripPoint | null>(null);
-  const [destination, setDestination] = useState<TripPoint | null>(null);
-  const [originText, setOriginText] = useState("");
-  const [destinationText, setDestinationText] = useState("");
-  const [corridorKm, setCorridorKm] = useState(2);
-  const [routeSort, setRouteSort] = useState<RouteSortMode>("best");
+  const [origin, setOrigin] = useState<TripPoint | null>(restored?.trip.origin ?? null);
+  const [destination, setDestination] = useState<TripPoint | null>(
+    restored?.trip.destination ?? null,
+  );
+  const [originText, setOriginText] = useState(restored?.trip.originText ?? "");
+  const [destinationText, setDestinationText] = useState(restored?.trip.destinationText ?? "");
+  const [corridorKm, setCorridorKm] = useState(restored?.trip.corridorKm ?? 2);
+  const [routeSort, setRouteSort] = useState<RouteSortMode>(restored?.trip.routeSort ?? "best");
   const [tripName, setTripName] = useState("");
   const [routeQueryInput, setRouteQueryInput] = useState<{
     origin: Coords;
     destination: Coords;
     corridorKm: number;
-  } | null>(null);
+  } | null>(restored?.trip.query ?? null);
   const [locateTarget, setLocateTarget] = useState<"search" | "origin">("search");
+
+  // Suchzustand für die Sitzung sichern (Dialoge, Hover und Eingabe-Entwürfe bewusst nicht).
+  useEffect(() => {
+    saveSearchSession({
+      center,
+      placeLabel,
+      radius: committedRadius,
+      fuel,
+      sort,
+      tab,
+      trip: {
+        origin,
+        destination,
+        originText,
+        destinationText,
+        corridorKm,
+        routeSort,
+        query: routeQueryInput,
+      },
+    });
+  }, [
+    center,
+    placeLabel,
+    committedRadius,
+    fuel,
+    sort,
+    tab,
+    origin,
+    destination,
+    originText,
+    destinationText,
+    corridorKm,
+    routeSort,
+    routeQueryInput,
+  ]);
 
   const geo = useGeolocation();
   const favorites = useFavorites();
