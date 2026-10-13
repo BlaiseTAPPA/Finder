@@ -1,5 +1,5 @@
 /** Quellen- und Lizenzhinweis (Tankerkönig CC BY 4.0, OSM) – Footer am Desktop, Menü auf Mobil. */
-export const TANKERKOENIG_URL = "https://creativecommons.tankerkoenig.de/";
+const TANKERKOENIG_URL = "https://creativecommons.tankerkoenig.de/";
 
 export function DataCredits({ className }: { className?: string | undefined }) {
   return (
