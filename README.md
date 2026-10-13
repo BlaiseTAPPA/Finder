@@ -201,3 +201,9 @@ Outside Vercel, `npm run build && npm start` serves the API and the built fronte
 | [OSRM demo server](https://project-osrm.org)             | Driving routes                 | Demo use only. Set `OSRM_BASE_URL` to your own instance for production traffic.                                    |
 
 For commercial use, or traffic beyond what these free services allow, you'll need your own instances or paid plans.
+
+## License
+
+The source code is released under the [MIT License](LICENSE).
+
+The license covers the code only. Data and services used by the app keep their own terms (see the table above). In particular, Tankerkönig price data is CC BY 4.0 for **non-commercial use**, whatever the code license.

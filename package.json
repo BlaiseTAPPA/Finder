@@ -1,6 +1,7 @@
 {
   "name": "tankstellen-finder",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
