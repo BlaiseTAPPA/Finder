@@ -1,4 +1,4 @@
-/** Kopfleiste: kompakt mit Menü-Sheet auf Mobile, horizontale Navigation ab md. */
+/** Kopfleiste: Marke, Konto und Menü-Sheet auf Mobile (Bereichs-Tabs liegen in der Seite). */
 import { useState } from "react";
 import { BellRing, Fuel, LogIn, Menu, Route as RouteIcon, Star, Target } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -27,39 +27,22 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
   const isClerkEnabled = useIsClerkEnabled();
 
   return (
-    <header className="sticky top-0 z-30 bg-ink pt-[env(safe-area-inset-top)]">
+    <header className="sticky top-0 z-30 bg-chrome pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-safe md:h-12">
-        <Fuel className="size-4 shrink-0 text-on-dark" />
-        <span className="truncate text-caption font-medium text-on-dark">Tankstellen-Finder</span>
+        <Fuel className="size-4 shrink-0 text-on-chrome" />
+        <span className="truncate text-caption font-medium text-on-chrome">Tankstellen-Finder</span>
 
-        {/* Navigation ab md */}
-        <nav className="ml-auto hidden items-center gap-1 md:flex">
-          {ITEMS.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => onTab(item.value)}
-              className={cn(
-                "text-fine rounded-full px-3 py-1.5 transition-colors pointer-coarse:min-h-11",
-                tab === item.value
-                  ? "bg-on-dark/15 text-on-dark"
-                  : "text-on-dark/60 hover:text-on-dark",
-              )}
-            >
-              {item.label}
-              {item.value === "favorites" && favoritesCount > 0 ? ` (${favoritesCount})` : ""}
-            </button>
-          ))}
-        </nav>
+        {/* Bereichswahl übernimmt die Tab-Leiste der Seite; hier nur Konto + Mobil-Menü. */}
+        <div className="flex-1" />
 
         {/* Konto */}
         {isClerkEnabled && (
-          <div className="ml-auto flex items-center gap-1 md:ml-2">
+          <div className="flex items-center gap-1">
             <SignedIn>
               <Link
                 to="/alerts"
                 aria-label="Preisalarme"
-                className="flex size-11 items-center justify-center rounded-full text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:pointer-fine:size-9"
+                className="flex size-11 items-center justify-center rounded-full text-on-chrome/80 transition-colors hover:bg-on-chrome/10 hover:text-on-chrome md:pointer-fine:size-9"
               >
                 <BellRing className="size-4" />
               </Link>
@@ -70,7 +53,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
             <SignedOut>
               <Link
                 to="/sign-in"
-                className="text-fine flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark md:pointer-fine:min-h-9"
+                className="text-fine flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-on-chrome/80 transition-colors hover:bg-on-chrome/10 hover:text-on-chrome md:pointer-fine:min-h-9"
               >
                 <LogIn className="size-4" />
                 <span className="hidden sm:inline">Anmelden</span>
@@ -87,7 +70,7 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
               variant="ghost"
               size="icon"
               aria-label="Menü öffnen"
-              className="size-11 shrink-0 text-on-dark hover:bg-on-dark/10 hover:text-on-dark md:hidden"
+              className="size-11 shrink-0 text-on-chrome hover:bg-on-chrome/10 hover:text-on-chrome md:hidden"
             >
               <Menu className="size-5" />
             </Button>
