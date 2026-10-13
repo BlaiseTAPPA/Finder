@@ -173,7 +173,7 @@ export function RouteForm({
       <div className="grid min-w-0 items-end gap-5 sm:grid-cols-[1fr_auto]">
         <div className="min-w-0 space-y-3">
           <div className="flex items-baseline justify-between">
-            <Label htmlFor="corridor" className="text-caption text-muted-foreground">
+            <Label id="corridor-label" className="text-caption text-muted-foreground">
               Korridorbreite
             </Label>
             <span className="num text-caption font-semibold text-foreground">
@@ -181,7 +181,8 @@ export function RouteForm({
             </span>
           </div>
           <Slider
-            id="corridor"
+            aria-labelledby="corridor-label"
+            aria-valuetext={`± ${corridorKm.toFixed(1).replace(".", ",")} km`}
             min={0.5}
             max={10}
             step={0.5}

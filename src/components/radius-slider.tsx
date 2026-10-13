@@ -12,13 +12,14 @@ export function RadiusSlider({ value, onChange, onCommit }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <Label htmlFor="radius" className="text-caption text-muted-foreground">
+        <Label id="radius-label" className="text-caption text-muted-foreground">
           Umkreis
         </Label>
         <span className="num text-caption font-semibold text-foreground">{value} km</span>
       </div>
       <Slider
-        id="radius"
+        aria-labelledby="radius-label"
+        aria-valuetext={`${value} km`}
         min={1}
         max={25}
         step={1}

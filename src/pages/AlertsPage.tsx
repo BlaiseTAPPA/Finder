@@ -73,9 +73,11 @@ export function AlertsPage() {
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div className="sm:col-span-3">
-              <Label className="text-caption text-ink-2">Station</Label>
+              <Label className="text-caption text-ink-2" htmlFor="alert-station">
+                Station
+              </Label>
               <Select value={stationId} onValueChange={setStationId}>
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger id="alert-station" className="mt-1.5">
                   <SelectValue placeholder="Favorit wählen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -88,9 +90,11 @@ export function AlertsPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-caption text-ink-2">Kraftstoff</Label>
+              <Label className="text-caption text-ink-2" htmlFor="alert-fuel">
+                Kraftstoff
+              </Label>
               <Select value={fuelType} onValueChange={(v) => setFuelType(v as FuelType)}>
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger id="alert-fuel" className="mt-1.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
