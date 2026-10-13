@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowLeft, BellRing, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getAccount, removeAlert, saveAlert, toggleAlert } from "@/lib/account.functions";
+import { Notice } from "@/components/states";
+import { cn } from "@/lib/utils";
 import { FUEL_LABELS, FUEL_TYPES, type FuelType } from "@/types/station";
 
 export function AlertsPage() {
@@ -54,27 +57,27 @@ export function AlertsPage() {
     <main className="mx-auto max-w-2xl px-safe pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
       <Link
         to="/"
-        className="text-fine inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+        className="text-caption -ml-1 inline-flex min-h-11 items-center gap-1 px-1 text-ink-2 hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> Zurück
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight">Preisalarme</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <h1 className="text-title mt-1 text-foreground">Preisalarme</h1>
+      <p className="text-caption mt-1 text-ink-2">
         Wir markieren einen Alarm, sobald der zuletzt erfasste Preis unter deiner Schwelle liegt.
       </p>
 
-      <section className="mt-6 rounded-2xl border p-4">
-        <h2 className="text-sm font-semibold">Neuer Alarm</h2>
+      <section className="mt-6 rounded-md border bg-surface p-4 sm:p-5">
+        <h2 className="text-body font-semibold text-foreground">Neuer Alarm</h2>
         {favorites.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Speichere zuerst eine Station als Favorit.
-          </p>
+          <p className="text-caption mt-2 text-ink-2">Speichere zuerst eine Station als Favorit.</p>
         ) : (
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div className="sm:col-span-3">
-              <Label className="text-fine">Station</Label>
+              <Label className="text-caption text-ink-2" htmlFor="alert-station">
+                Station
+              </Label>
               <Select value={stationId} onValueChange={setStationId}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger id="alert-station" className="mt-1.5">
                   <SelectValue placeholder="Favorit wählen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -87,9 +90,11 @@ export function AlertsPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-fine">Kraftstoff</Label>
+              <Label className="text-caption text-ink-2" htmlFor="alert-fuel">
+                Kraftstoff
+              </Label>
               <Select value={fuelType} onValueChange={(v) => setFuelType(v as FuelType)}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger id="alert-fuel" className="mt-1.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -102,13 +107,13 @@ export function AlertsPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-fine" htmlFor="threshold">
+              <Label className="text-caption text-ink-2" htmlFor="threshold">
                 Schwelle (€)
               </Label>
               <Input
                 id="threshold"
                 inputMode="decimal"
-                className="mt-1"
+                className="mt-1.5"
                 value={threshold}
                 onChange={(e) => setThreshold(e.target.value)}
               />
@@ -124,28 +129,43 @@ export function AlertsPage() {
 
       <section className="mt-6 space-y-3">
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Wird geladen …</p>
+          <p className="text-caption text-ink-2">Wird geladen …</p>
         ) : alerts.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Noch keine Alarme.</p>
+          <Notice
+            icon={<BellRing />}
+            title="Noch keine Alarme"
+            description="Lege oben einen Alarm für eine deiner Favoriten-Stationen an."
+          />
         ) : (
           alerts.map((alert) => {
             const hit = alert.currentPrice !== null && alert.currentPrice <= alert.threshold;
             return (
-              <div key={alert.id} className="flex items-center gap-3 rounded-2xl border p-4">
+              <div
+                key={alert.id}
+                className={cn(
+                  "flex items-center gap-3 rounded-md border bg-surface p-4",
+                  !alert.active && "bg-surface-sunken",
+                )}
+              >
                 <BellRing
-                  className={
-                    hit && alert.active ? "size-5 text-primary" : "size-5 text-muted-foreground"
-                  }
+                  className={cn(
+                    "size-5 shrink-0",
+                    hit && alert.active ? "text-price-low" : "text-ink-3",
+                  )}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{alert.stationName}</p>
-                  <p className="text-fine text-muted-foreground">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <p className="text-body truncate font-semibold text-foreground">
+                      {alert.stationName}
+                    </p>
+                    {hit && alert.active && <Badge variant="positive">Erreicht</Badge>}
+                  </div>
+                  <p className="num text-caption text-ink-2">
                     {FUEL_LABELS[alert.fuelType]} unter{" "}
                     {alert.threshold.toFixed(3).replace(".", ",")} €
                     {alert.currentPrice !== null
                       ? ` · aktuell ${alert.currentPrice.toFixed(3).replace(".", ",")} €`
                       : " · noch kein Preis erfasst"}
-                    {hit && alert.active ? " · erreicht!" : ""}
                   </p>
                 </div>
                 <Switch
@@ -159,6 +179,7 @@ export function AlertsPage() {
                   variant="ghost"
                   size="icon"
                   aria-label="Alarm löschen"
+                  className="shrink-0 rounded-full text-ink-3 hover:text-destructive"
                   onClick={() => {
                     void removeAlert({ data: { id: alert.id } }).then(refresh);
                   }}

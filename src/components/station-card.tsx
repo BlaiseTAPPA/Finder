@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { directionsUrl, formatDistance, formatPrice } from "@/lib/format";
+import { PriceFigure } from "@/components/price-figure";
+import { directionsUrl, formatDistance } from "@/lib/format";
 import { TrendBadge, TrendHint } from "@/components/trend-badge";
 import { DetourBadge } from "@/components/detour-badge";
 import { CommunityTrustBadge } from "@/components/community-trust-badge";
@@ -70,37 +71,40 @@ export function StationCard({
   community,
   distanceLabel,
 }: Props) {
+  const price = station.prices[fuel];
+  const others = FUEL_TYPES.filter((type) => type !== fuel);
+  const ghostAction = "min-w-11 px-3 text-ink-2";
+
   return (
     <Card
       onMouseEnter={() => onHover?.(station.id)}
       onMouseLeave={() => onHover?.(null)}
       onClick={() => onSelect?.(station.id)}
       className={cn(
-        "cursor-pointer gap-0 rounded-lg border-hairline p-4 shadow-none transition-all sm:p-5",
-        "hover:border-border hover:shadow-tile",
-        active && "border-primary/50 shadow-tile",
-        cheapest && "border-primary/60 bg-pearl",
+        "cursor-pointer gap-0 bg-surface p-4 transition-colors sm:p-5",
+        "hover:border-border-strong",
+        active && "border-border-strong bg-surface-sunken/60",
       )}
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+      {/* Preis zuerst: ausgewählte Sorte groß, Entfernung rechts daneben */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-x-3">
         <div className="min-w-0">
-          {cheapest && (
-            <span className="text-fine mb-1 inline-block font-semibold tracking-wide text-primary uppercase">
-              Günstigster Preis
-            </span>
-          )}
-          <h3
-            title={station.name}
-            className="truncate text-[16px] leading-tight font-semibold text-ink sm:text-[17px]"
-          >
-            {station.name}
-          </h3>
-          <p
-            title={`${station.brand} · ${formatAddress(station)}`}
-            className="text-caption mt-0.5 truncate text-muted-foreground"
-          >
-            {station.brand} · {formatAddress(station)}
+          <p className="text-fine font-medium text-ink-2">
+            {cheapest ? <span className="font-semibold text-price-low">Günstigster · </span> : null}
+            {FUEL_LABELS[fuel]}
           </p>
+          <p
+            className={cn("text-price-xl mt-1", price === null ? "text-ink-3" : "text-foreground")}
+          >
+            <PriceFigure value={price} />
+          </p>
+        </div>
+
+        <div className="pt-0.5 text-right">
+          <p className="num text-body font-semibold text-foreground">
+            {formatDistance(station.dist)}
+          </p>
+          {distanceLabel && <p className="text-fine text-ink-3">{distanceLabel}</p>}
         </div>
 
         <button
@@ -110,25 +114,45 @@ export function StationCard({
             event.stopPropagation();
             onToggleFavorite(station);
           }}
-          className="-mt-1 -mr-1 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-parchment hover:text-primary"
+          className="-mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-3 transition-colors hover:bg-surface-sunken hover:text-favorite"
         >
-          <Star className={cn("size-4", isFavorite && "fill-primary text-primary")} />
+          <Star className={cn("size-5", isFavorite && "fill-favorite text-favorite")} />
         </button>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
-        <Badge
-          variant="outline"
-          className={cn(
-            "text-fine rounded-full border-0 px-2.5 py-1 font-medium",
-            station.isOpen ? "bg-success/12 text-success" : "bg-destructive/10 text-destructive",
-          )}
-        >
-          {station.isOpen ? "Geöffnet" : "Geschlossen"}
-        </Badge>
+      {/* Station */}
+      <h3 title={station.name} className="text-body mt-3 truncate font-semibold text-foreground">
+        {station.name}
+      </h3>
+      <p
+        title={`${station.brand} · ${formatAddress(station)}`}
+        className="text-caption truncate text-ink-2"
+      >
+        {station.brand} · {formatAddress(station)}
+      </p>
+
+      {/* Übrige Sorten, kompakt in einer Zeile */}
+      <dl className="text-caption mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        {others.map((type) => (
+          <div key={type} className="flex items-baseline gap-1.5">
+            <dt className="text-ink-3">{FUEL_LABELS[type]}</dt>
+            <dd
+              className={cn(
+                "text-price-sm",
+                station.prices[type] === null ? "text-ink-3" : "text-ink-2",
+              )}
+            >
+              <PriceFigure value={station.prices[type]} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* Signale: nur Ausnahmen und Kontext */}
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 empty:hidden">
+        {!station.isOpen && <Badge variant="negative">Geschlossen</Badge>}
         <TrendBadge trend={trend} />
         <CommunityTrustBadge status={community?.status} />
-
         {detour && (
           <DetourBadge
             detourKm={detour.detourKm}
@@ -136,87 +160,59 @@ export function StationCard({
             savings={Number.isFinite(detour.score) ? detour.score : undefined}
           />
         )}
-        <span className="num text-fine text-muted-foreground">
-          {distanceLabel ? `${distanceLabel} ` : ""}
-          {formatDistance(station.dist)}
-        </span>
-      </div>
-
-      <div className="mt-4 grid grid-cols-3 gap-1.5 border-t border-hairline pt-4 sm:gap-2">
-        {FUEL_TYPES.map((type) => {
-          const selected = type === fuel;
-          return (
-            <div
-              key={type}
-              className={cn(
-                "min-w-0 rounded-md px-1 py-2 text-center sm:px-2",
-                selected ? "bg-parchment" : "",
-              )}
-            >
-              <p className="text-fine text-muted-foreground">{FUEL_LABELS[type]}</p>
-              <p
-                className={cn(
-                  "price-display mt-1 text-[17px] sm:text-[19px]",
-                  selected ? "text-ink" : "text-ink-muted",
-                  station.prices[type] === null && "text-muted-foreground",
-                )}
-              >
-                {formatPrice(station.prices[type])}
-              </p>
-            </div>
-          );
-        })}
       </div>
 
       <TrendHint trend={trend} />
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {onOpenTrend && (
+      {/* Aktionen: Route ist die Hauptaktion, der Rest kompakt */}
+      <div className="@container mt-3 border-t border-border pt-3">
+        <div className="flex items-center gap-1">
           <Button
-            variant="ghost"
-            className="min-h-11 flex-1 rounded-full text-primary hover:bg-parchment hover:text-primary"
+            className="flex-1"
             onClick={(event) => {
               event.stopPropagation();
-              onOpenTrend(station);
+              window.open(directionsUrl(station), "_blank", "noopener,noreferrer");
             }}
           >
-            <LineChart className="size-4" />
-            Verlauf
+            <Navigation className="size-4" />
+            Route
           </Button>
-        )}
-        <Button
-          variant="ghost"
-          className="min-h-11 flex-1 rounded-full text-primary hover:bg-parchment hover:text-primary"
-          onClick={(event) => {
-            event.stopPropagation();
-            window.open(directionsUrl(station), "_blank", "noopener,noreferrer");
-          }}
-        >
-          <Navigation className="size-4" />
-          Route
-        </Button>
-        {community && (
-          <>
-            <ConfirmPriceButton
-              station={station}
-              fuel={fuel}
-              contributorId={community.contributorId}
-              userCoords={community.userCoords}
-              onDone={community.onChanged}
-            />
+          {onOpenTrend && (
             <Button
               variant="ghost"
-              className="min-h-11 flex-1 rounded-full text-muted-foreground hover:bg-parchment hover:text-ink"
+              className={ghostAction}
               onClick={(event) => {
                 event.stopPropagation();
-                community.onReport(station);
+                onOpenTrend(station);
               }}
             >
-              <Flag className="size-4" />
-              Melden
+              <LineChart className="size-4" />
+              <span className="@max-sm:sr-only">Verlauf</span>
             </Button>
-          </>
-        )}
+          )}
+          {community && (
+            <>
+              <ConfirmPriceButton
+                station={station}
+                fuel={fuel}
+                contributorId={community.contributorId}
+                userCoords={community.userCoords}
+                onDone={community.onChanged}
+              />
+              <Button
+                variant="ghost"
+                className={cn(ghostAction, "text-ink-3")}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  community.onReport(station);
+                }}
+              >
+                <Flag className="size-4" />
+                <span className="@max-sm:sr-only">Melden</span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </Card>
   );

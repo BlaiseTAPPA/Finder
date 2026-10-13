@@ -61,18 +61,18 @@ export function ConfirmPriceButton({ station, fuel, contributorId, userCoords, o
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="flex-1">
+          <span className="inline-flex">
             <Button
               variant="ghost"
               disabled={disabled}
-              className="min-h-11 w-full rounded-full text-primary hover:bg-parchment hover:text-primary"
+              className="min-w-11 px-3 text-ink-2"
               onClick={(event) => {
                 event.stopPropagation();
                 void handleClick();
               }}
             >
               {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-              Stimmt
+              <span className="@max-sm:sr-only">Stimmt</span>
             </Button>
           </span>
         </TooltipTrigger>

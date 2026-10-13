@@ -2,9 +2,9 @@
  * Community-Badge: zusätzliches Vertrauenssignal.
  * Der angezeigte Preis stammt weiterhin ausschließlich von Tankerkönig.
  */
+import { AlertTriangle, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import type { CommunityStatus } from "@/lib/community";
 
 export function relativeTime(iso: string | null): string {
@@ -19,19 +19,15 @@ export function relativeTime(iso: string | null): string {
 export function CommunityTrustBadge({ status }: { status: CommunityStatus | undefined }) {
   if (!status || status.status === "neutral") return null;
   const confirmed = status.status === "confirmed";
+  const Icon = confirmed ? BadgeCheck : AlertTriangle;
 
   return (
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-fine cursor-help rounded-full border-0 px-2.5 py-1 font-medium",
-              confirmed ? "bg-success/12 text-success" : "bg-destructive/10 text-destructive",
-            )}
-          >
-            {confirmed ? "✓ Kürzlich bestätigt" : "⚠️ Preis angezweifelt"}
+          <Badge variant={confirmed ? "positive" : "negative"} tabIndex={0} className="cursor-help">
+            <Icon aria-hidden />
+            {confirmed ? "Kürzlich bestätigt" : "Preis angezweifelt"}
           </Badge>
         </TooltipTrigger>
         <TooltipContent className="max-w-64 text-xs">

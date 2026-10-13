@@ -3,7 +3,7 @@
  * Wird nur im Browser geladen (React.lazy hinter <ClientOnly>),
  * da Leaflet beim Import auf `window` zugreift.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import L from "leaflet";
 import {
   MapContainer,
@@ -16,26 +16,78 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
-import { directionsUrl, formatDistance, formatPrice } from "@/lib/format";
+import { PriceFigure } from "@/components/price-figure";
+import { directionsUrl, formatDistance } from "@/lib/format";
 import { FUEL_LABELS, type Coords, type FuelType, type Station } from "@/types/station";
 
-/** Grün (günstig) bis Rot (teuer) für die Trajet-Ansicht. */
-function priceColor(rank: number): string {
-  const hue = 130 - Math.max(0, Math.min(1, rank)) * 130;
-  return `hsl(${hue} 62% 42%)`;
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende';
+
+/**
+ * Kartenstil je Farbschema. Freie Dunkel-Kacheln ohne Schlüssel gibt es nicht mehr
+ * (CARTO liefert nur noch "API KEY REQUIRED"). Ohne Konfiguration werden daher im
+ * Dunkelmodus die OSM-Kacheln abgedunkelt; mit VITE_MAP_DARK_TILES_URL (+ _ATTRIBUTION)
+ * wird ein echter Dunkel-Stil eines Anbieters mit Schlüssel genutzt (z. B. MapTiler, Stadia).
+ */
+const env = import.meta.env as Record<string, string | undefined>;
+const DARK_URL = env["VITE_MAP_DARK_TILES_URL"]?.trim() || null;
+const DARK_ATTRIBUTION = env["VITE_MAP_DARK_TILES_ATTRIBUTION"]?.trim() || OSM_ATTRIBUTION;
+
+const OSM_TILES = {
+  url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution: OSM_ATTRIBUTION,
+  className: "",
+};
+
+function tilesFor(dark: boolean) {
+  if (!dark) return OSM_TILES;
+  if (DARK_URL) return { url: DARK_URL, attribution: DARK_ATTRIBUTION, className: "" };
+  return { ...OSM_TILES, className: "tiles-dimmed" };
 }
 
-/** Schlichter Pin im Design-System-Blau; hervorgehoben = größer + gefüllt. */
-function pin(highlighted: boolean, cheapest: boolean, color?: string) {
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+/** Folgt dem System-Farbschema live (wie styles.css), damit Karte und UI zusammenpassen. */
+function usePrefersDark(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia(DARK_QUERY);
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(DARK_QUERY).matches,
+    () => false,
+  );
+}
+
+/** Dieselbe 3-stufige Preisskala wie die Badges: günstig / mittel / teuer. */
+function priceColor(rank: number | undefined): string {
+  if (rank === undefined) return "var(--ink-3)";
+  if (rank <= 1 / 3) return "var(--price-low)";
+  if (rank <= 2 / 3) return "var(--price-mid)";
+  return "var(--price-high)";
+}
+
+/** Rang 0 (günstigste) … 1 (teuerste) der gewählten Sorte; Stationen ohne Preis fehlen. */
+function rankByPrice(stations: Station[], fuel: FuelType): Map<string, number> {
+  const priced = stations.filter((s) => s.prices[fuel] !== null);
+  const values = priced.map((s) => s.prices[fuel]!);
+  const min = Math.min(...values);
+  const span = Math.max(...values) - min;
+  return new Map(priced.map((s) => [s.id, span > 0 ? (s.prices[fuel]! - min) / span : 0]));
+}
+
+/** Pin in Preisfarbe (Design-Tokens, folgt dem Farbschema); hervorgehoben = größer + gefüllt. */
+function pin(highlighted: boolean, cheapest: boolean, color: string) {
   const size = highlighted ? 34 : 26;
-  const stroke = color ?? "#0066cc";
-  const fill = cheapest || highlighted ? stroke : "#ffffff";
-  const dot = cheapest || highlighted ? "#ffffff" : stroke;
+  const filled = cheapest || highlighted;
+  const fill = filled ? color : "var(--surface)";
+  const dot = filled ? "var(--surface)" : color;
   return L.divIcon({
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${fill};border:2px solid ${stroke};box-shadow:0 2px 10px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center"><span style="width:${size / 4}px;height:${size / 4}px;border-radius:9999px;background:${dot}"></span></div>`,
+    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${fill};border:2px solid ${color};box-shadow:var(--shadow-float);display:flex;align-items:center;justify-content:center"><span style="width:${size / 4}px;height:${size / 4}px;border-radius:9999px;background:${dot}"></span></div>`,
   });
 }
 
@@ -106,9 +158,17 @@ export default function StationMap({
     [stations, activeId],
   );
 
+  const tiles = tilesFor(usePrefersDark());
+
   // Nur im Browser ausgewertet (Komponente wird ausschließlich clientseitig geladen).
   const coarsePointer =
     typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+
+  // Trajet liefert den Rang mit; in der Umkreissuche wird er hier für die Pinfarbe ermittelt.
+  const ranks = useMemo(
+    () => priceRank ?? rankByPrice(stations, fuel),
+    [priceRank, stations, fuel],
+  );
 
   const line = useMemo(
     () => (routeLine ?? []).map((p) => [p.lat, p.lng] as [number, number]),
@@ -127,9 +187,12 @@ export default function StationMap({
     >
       {/* Zoom-Buttons unten rechts, außerhalb der Daumenzone am unteren Rand. */}
       <ZoomControl position="bottomright" />
+      {/* key: Attribution und Klasse sind in Leaflet nicht nachträglich änderbar → neu montieren. */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        key={`${tiles.url}|${tiles.className}`}
+        url={tiles.url}
+        attribution={tiles.attribution}
+        className={tiles.className}
         maxZoom={19}
       />
       {line.length > 1 ? (
@@ -145,13 +208,16 @@ export default function StationMap({
           <Polyline
             positions={line}
             pathOptions={{
-              color: "#0066cc",
+              className: "route-line",
               opacity: 0.12,
               weight: Math.min(60, Math.max(12, (corridorKm ?? 2) * 9)),
               lineCap: "round",
             }}
           />
-          <Polyline positions={line} pathOptions={{ color: "#0066cc", opacity: 0.9, weight: 4 }} />
+          <Polyline
+            positions={line}
+            pathOptions={{ className: "route-line", opacity: 0.9, weight: 4 }}
+          />
         </>
       )}
 
@@ -162,7 +228,7 @@ export default function StationMap({
           icon={pin(
             station.id === activeId,
             station.id === cheapestId,
-            priceRank ? priceColor(priceRank.get(station.id) ?? 0.5) : undefined,
+            priceColor(ranks.get(station.id)),
           )}
           eventHandlers={{
             click: () => onSelect?.(station.id),
@@ -171,19 +237,20 @@ export default function StationMap({
           }}
         >
           <Popup maxWidth={260} minWidth={180} autoPanPadding={[16, 16]}>
-            <div style={{ maxWidth: 240 }}>
-              <strong style={{ fontSize: 14 }}>{station.name}</strong>
-              <div style={{ fontSize: 12, color: "#7a7a7a", marginTop: 2 }}>
-                {station.brand} · {formatDistance(station.dist)} ·{" "}
-                {station.isOpen ? "geöffnet" : "geschlossen"}
+            <div className="max-w-60">
+              <div className="text-fine text-ink-2">{FUEL_LABELS[fuel]}</div>
+              <div className="price-display mt-0.5 text-xl leading-none text-foreground">
+                <PriceFigure value={station.prices[fuel]} />
               </div>
-              <div style={{ fontSize: 15, fontWeight: 600, marginTop: 8 }}>
-                {FUEL_LABELS[fuel]}: {formatPrice(station.prices[fuel])}
+              <div className="text-caption mt-2 font-semibold text-foreground">{station.name}</div>
+              <div className="text-fine text-ink-2">
+                {station.brand} · {formatDistance(station.dist)}
+                {station.isOpen ? "" : " · geschlossen"}
               </div>
               <Button
                 type="button"
                 variant="link"
-                className="mt-2 h-auto p-0 text-[13px]"
+                className="text-caption mt-2 h-auto p-0"
                 onClick={(event) => {
                   event.stopPropagation();
                   window.open(directionsUrl(station), "_blank", "noopener,noreferrer");

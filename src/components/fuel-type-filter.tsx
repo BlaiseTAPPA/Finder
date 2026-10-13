@@ -10,13 +10,9 @@ interface Props {
 export function FuelTypeFilter({ value, onChange }: Props) {
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as FuelType)}>
-      <TabsList className="h-11 w-full rounded-full bg-parchment p-1">
+      <TabsList className="w-full">
         {FUEL_TYPES.map((fuel) => (
-          <TabsTrigger
-            key={fuel}
-            value={fuel}
-            className="flex-1 rounded-full text-caption data-[state=active]:bg-background data-[state=active]:shadow-none"
-          >
+          <TabsTrigger key={fuel} value={fuel} className="flex-1">
             {FUEL_LABELS[fuel]}
           </TabsTrigger>
         ))}

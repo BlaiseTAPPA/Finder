@@ -3,27 +3,27 @@
 @import "tw-animate-css";
 
 /*
- * Design system — "Apple gallery" direction.
- * Photography-first, quiet chrome, one interactive color (Action Blue).
- * All values are semantic tokens; components never hardcode colors.
+ * Design system — "road-sign utility".
+ * Price first, color carries meaning (one role per hue), hairline borders over shadows,
+ * compact rhythm with a 44px touch floor. Components use semantic tokens only.
  */
 
 @theme inline {
-  --font-sans:
-    "SF Pro Text", "SF Pro Display", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "SF Pro Display", system-ui, -apple-system, sans-serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-display: var(--font-sans);
+  /* DIN-style figures, zero download: Bahnschrift (Windows), DIN Alternate (Apple). */
+  --font-figure:
+    "Bahnschrift", "DIN Alternate", "Barlow Semi Condensed", system-ui, -apple-system, sans-serif;
 
-  --radius-xs: 5px;
-  --radius-sm: 8px;
-  --radius-md: 11px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --radius-2xl: 28px;
-  --radius-3xl: 34px;
-  --radius-4xl: 40px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -41,61 +41,107 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
-  --color-hairline: var(--hairline);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --color-parchment: var(--parchment);
-  --color-pearl: var(--pearl);
-  --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-tile-dark: var(--tile-dark);
-  --color-on-dark: var(--on-dark);
 
-  --shadow-product: 0 24px 60px -20px oklch(0 0 0 / 0.28);
-  --shadow-tile: 0 2px 14px -6px oklch(0 0 0 / 0.12);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-price-low: var(--price-low);
+  --color-price-mid: var(--price-mid);
+  --color-price-high: var(--price-high);
+  --color-favorite: var(--favorite);
+  --color-route: var(--route);
+  --color-scrim: var(--scrim);
+  --color-chrome: var(--chrome);
+  --color-on-chrome: var(--on-chrome);
+
+  /* the only elevation: floating layers (popover, dropdown, map popup) */
+  --shadow-float: 0 4px 16px -4px oklch(0 0 0 / 0.18);
 }
 
 :root {
-  --radius: 18px;
+  color-scheme: light;
+  --radius: 8px;
 
-  /* canvases */
-  --background: oklch(1 0 0);
-  --parchment: oklch(0.966 0.0012 286);
-  --pearl: oklch(0.982 0.0012 286);
-  --tile-dark: oklch(0.272 0.0025 286);
-  --on-dark: oklch(1 0 0);
+  /* surfaces */
+  --background: oklch(0.985 0.002 250);
+  --surface: oklch(1 0 0);
+  --surface-sunken: oklch(0.955 0.003 250);
+  --border: oklch(0.9 0.004 250);
+  --border-strong: oklch(0.8 0.006 250);
+  --input: oklch(0.64 0.01 250); /* 3:1 field boundary (WCAG 1.4.11) */
 
   /* ink */
-  --foreground: oklch(0.219 0.0028 285.9);
-  --ink: oklch(0.219 0.0028 285.9);
-  --ink-muted: oklch(0.331 0 0);
-  --muted-foreground: oklch(0.578 0 0);
+  --foreground: oklch(0.2 0.01 250);
+  --ink-2: oklch(0.42 0.01 250);
+  --ink-3: oklch(0.55 0.01 250);
+  --muted-foreground: oklch(0.5 0.01 250);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.219 0.0028 285.9);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.219 0.0028 285.9);
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
 
-  /* the single interactive color */
-  --primary: oklch(0.524 0.176 254.6);
+  /* roles — one meaning each */
+  --primary: oklch(0.5 0.15 255); /* interactive only */
   --primary-foreground: oklch(1 0 0);
+  --ring: oklch(0.56 0.16 255);
+  --price-low: oklch(0.49 0.13 150);
+  --price-mid: oklch(0.6 0.12 75);
+  --price-high: oklch(0.54 0.18 28);
+  --favorite: oklch(0.66 0.15 70); /* 3:1 on white for the filled star */
+  --route: var(--primary);
+  --scrim: oklch(0.15 0.01 250 / 0.55);
+  --chrome: oklch(0.2 0.01 250);
+  --on-chrome: oklch(0.98 0 0);
 
-  --secondary: oklch(0.966 0.0012 286);
-  --secondary-foreground: oklch(0.219 0.0028 285.9);
-  --muted: oklch(0.966 0.0012 286);
-  --accent: oklch(0.966 0.0012 286);
-  --accent-foreground: oklch(0.219 0.0028 285.9);
+  --secondary: var(--surface-sunken);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-sunken);
+  --accent: var(--surface-sunken);
+  --accent-foreground: var(--foreground);
 
-  --destructive: oklch(0.567 0.208 26.4);
+  --destructive: oklch(0.54 0.19 27);
   --destructive-foreground: oklch(1 0 0);
-  --success: oklch(0.567 0.132 152);
+  --success: oklch(0.49 0.13 150);
   --success-foreground: oklch(1 0 0);
+}
 
-  --border: oklch(0.928 0 0);
-  --hairline: oklch(0.958 0 0);
-  --input: oklch(0.898 0 0);
-  --ring: oklch(0.56 0.19 254.6);
+/* Night driving: follow the OS setting. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --background: oklch(0.17 0.008 250);
+    --surface: oklch(0.21 0.008 250);
+    --surface-sunken: oklch(0.25 0.008 250);
+    --border: oklch(0.3 0.008 250);
+    --border-strong: oklch(0.42 0.01 250);
+    --input: oklch(0.55 0.01 250);
+
+    --foreground: oklch(0.95 0.004 250);
+    --ink-2: oklch(0.8 0.006 250);
+    --ink-3: oklch(0.66 0.008 250);
+    --muted-foreground: oklch(0.7 0.008 250);
+
+    --primary: oklch(0.7 0.13 255);
+    --primary-foreground: oklch(0.17 0.008 250);
+    --ring: oklch(0.7 0.13 255);
+    --price-low: oklch(0.74 0.14 150);
+    --price-mid: oklch(0.8 0.12 80);
+    --price-high: oklch(0.7 0.16 28);
+    --favorite: oklch(0.82 0.14 85);
+    --scrim: oklch(0 0 0 / 0.65);
+    --chrome: oklch(0.13 0.008 250);
+    --on-chrome: oklch(0.95 0.004 250);
+
+    --destructive: oklch(0.7 0.16 27);
+    --destructive-foreground: oklch(0.17 0.008 250);
+    --success: oklch(0.74 0.14 150);
+    --success-foreground: oklch(0.17 0.008 250);
+  }
 }
 
 @layer base {
@@ -103,9 +149,14 @@
     border-color: var(--color-border);
   }
 
+  /*
+   * clip, not hidden: overflow-x:hidden turns the element into a scroll container
+   * (overflow-y computes to auto), which silently disables position:sticky for the
+   * header, the desktop map and the mobile list/map toggle.
+   */
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100vw;
     width: 100%;
   }
@@ -120,63 +171,65 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    letter-spacing: -0.374px;
   }
 
   #root {
     width: 100%;
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   h1,
   h2,
   h3 {
-    font-family: var(--font-display);
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
+  }
+
+  /* Sichtbarer Tastaturfokus für alles ohne eigenen Ring (Primitives setzen outline-none). */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  .bg-chrome :focus-visible {
+    outline-color: var(--color-on-chrome);
+  }
+
+  /* Bewegung reduzieren; Ladespinner bleiben als Statusanzeige erhalten. */
+  @media (prefers-reduced-motion: reduce) {
+    *:not(.animate-spin),
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-@utility text-hero {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 6vw, 3.5rem);
+/* ---- Type scale ---- */
+
+@utility text-title {
+  font-size: 1.25rem;
   font-weight: 600;
-  line-height: 1.07;
-  letter-spacing: -0.02em;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
-@utility text-display {
-  font-family: var(--font-display);
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 600;
-  line-height: 1.1;
-}
-
-@utility text-lead {
-  font-family: var(--font-display);
-  font-size: clamp(1.125rem, 2.4vw, 1.5rem);
-  font-weight: 300;
-  line-height: 1.35;
-  letter-spacing: 0;
+@utility text-body {
+  font-size: 0.9375rem;
+  line-height: 1.4;
 }
 
 @utility text-caption {
-  font-size: 0.875rem;
-  line-height: 1.43;
-  letter-spacing: -0.224px;
-}
-
-/* Horizontal page padding that clears the iPhone notch in landscape (1rem elsewhere) */
-@utility px-safe {
-  padding-left: max(1rem, env(safe-area-inset-left));
-  padding-right: max(1rem, env(safe-area-inset-right));
+  font-size: 0.8125rem;
+  line-height: 1.35;
 }
 
 @utility text-fine {
   font-size: 0.75rem;
   line-height: 1.3;
-  letter-spacing: -0.12px;
 }
 
 /* Tabular numerals so prices align in a column */
@@ -186,27 +239,92 @@
 }
 
 @utility price-display {
-  font-family: var(--font-display);
+  font-family: var(--font-figure);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  font-feature-settings: "tnum";
 }
 
-/* Leaflet chrome kept quiet and on-brand */
-.leaflet-container {
+/* The selected price on a station card — the headline of the app. */
+@utility text-price-xl {
+  font-family: var(--font-figure);
+  font-size: 1.75rem;
+  font-weight: 650;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@utility text-price-sm {
+  font-family: var(--font-figure);
+  font-size: 0.9375rem;
+  font-weight: 550;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Horizontal page padding that clears the iPhone notch in landscape (1rem elsewhere) */
+@utility px-safe {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/*
+ * Leaflet chrome on tokens. leaflet.css loads after this file and hardcodes white
+ * surfaces, so every override must out-rank its selector: scoped under .leaflet-container,
+ * and with the class doubled where Leaflet already uses that exact selector.
+ */
+.leaflet-container.leaflet-container {
   font-family: var(--font-sans);
-  background: var(--parchment);
+  background: var(--surface-sunken);
 }
-.leaflet-popup-content-wrapper {
+.leaflet-container .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: var(--shadow-float);
+}
+.leaflet-container .leaflet-popup-content-wrapper {
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-tile);
+  border: 1px solid var(--border);
 }
-.leaflet-popup-content {
+.leaflet-container .leaflet-popup-content {
   margin: 12px 14px;
 }
-.leaflet-bar a,
-.leaflet-control-attribution {
-  color: var(--ink-muted);
+.leaflet-container.leaflet-container a.leaflet-popup-close-button {
+  color: var(--ink-3);
+}
+.leaflet-container.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container.leaflet-container a.leaflet-popup-close-button:focus {
+  color: var(--foreground);
+}
+.leaflet-container .leaflet-bar {
+  box-shadow: var(--shadow-float);
+}
+.leaflet-container .leaflet-bar a {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+.leaflet-container .leaflet-bar a:hover,
+.leaflet-container .leaflet-bar a:focus {
+  background-color: var(--surface-sunken);
+}
+.leaflet-container .leaflet-bar a.leaflet-disabled {
+  background-color: var(--surface-sunken);
+  color: var(--ink-3);
+}
+.leaflet-container.leaflet-container .leaflet-control-attribution {
+  background: color-mix(in oklch, var(--surface) 85%, transparent);
+  color: var(--ink-2);
+}
+.leaflet-container.leaflet-container .leaflet-control-attribution a {
+  color: var(--primary);
+}
+/* Route line + corridor: stroke from the token, so it follows the color scheme */
+.leaflet-container path.route-line {
+  stroke: var(--route);
 }
 /* 44px zoom buttons on touch screens (Leaflet's touch default is 30px) */
 @media (pointer: coarse) {
@@ -215,4 +333,9 @@
     height: 44px;
     line-height: 44px;
   }
+}
+
+/* Dark mode without a keyed dark tile provider: dim the OSM tiles (see station-map.tsx). */
+.tiles-dimmed {
+  filter: brightness(0.7) contrast(1.1) saturate(0.8);
 }

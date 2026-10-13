@@ -6,7 +6,15 @@ import { ClientOnly } from "@/components/ClientOnly";
 import { useServerFn } from "@/lib/server-fn-client";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshCw, Route as RouteIcon, Save, SlidersHorizontal, Star } from "lucide-react";
+import {
+  RefreshCw,
+  Route as RouteIcon,
+  Save,
+  SearchX,
+  SlidersHorizontal,
+  Star,
+  Target,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +38,7 @@ import { ResultsLayout } from "@/components/results-layout";
 import { SiteHeader, type MainTab } from "@/components/site-header";
 import { cn } from "@/lib/utils";
 
-import { EmptyState, ErrorState, StartState, StationSkeletons } from "@/components/states";
+import { EmptyState, ErrorState, Notice, StartState, StationSkeletons } from "@/components/states";
 import { useFavorites } from "@/lib/favorites";
 import { useTripFavorites } from "@/lib/route-favorites";
 import { useGeolocation } from "@/lib/geolocation";
@@ -57,6 +65,10 @@ const StationMap = lazy(() => import("@/components/station-map"));
 function MapSkeleton() {
   return <Skeleton className="h-full w-full rounded-lg" />;
 }
+
+/** Bereichs-Tabs als Unterstrich-Navigation (Segment-Optik bleibt den Filtern vorbehalten). */
+const PAGE_TAB =
+  "text-body -mb-px h-11 flex-none rounded-none border-b-2 border-transparent px-0.5 font-medium text-ink-2 hover:text-foreground data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none";
 
 export function HomePage() {
   const [center, setCenter] = useState<Coords | null>(null);
@@ -336,17 +348,17 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-background">
+    <div className="min-h-screen w-full overflow-x-clip bg-background">
       <SiteHeader tab={tab} onTab={setTab} favoritesCount={favorites.favorites.length} />
 
       {/* Hero + Suche */}
-      <section className="w-full bg-parchment">
-        <div className="mx-auto max-w-3xl px-safe py-8 text-center sm:py-12 lg:py-16">
-          <h1 className="text-hero text-ink">Günstig tanken. Ganz in der Nähe.</h1>
-          <p className="text-lead mx-auto mt-3 max-w-xl text-ink-muted sm:mt-4">
-            Aktuelle Preise für Super E5, E10 und Diesel aus der Tankerkönig-Datenbank.
+      <section className="w-full border-b border-border bg-surface">
+        <div className="mx-auto max-w-6xl px-safe py-4 sm:py-6">
+          <h1 className="text-title text-foreground">Günstig tanken. Ganz in der Nähe.</h1>
+          <p className="text-caption mt-1 text-ink-2">
+            Live-Preise für Super E5, E10 und Diesel · Quelle: Tankerkönig
           </p>
-          <div className="mt-6 text-left sm:mt-8">
+          <div className="mt-4 max-w-2xl">
             <SearchForm
               onSearch={handleSearch}
               onLocate={() => {
@@ -364,25 +376,17 @@ export function HomePage() {
 
       <main className="mx-auto w-full max-w-6xl px-safe py-6 sm:py-8">
         <Tabs value={tab} onValueChange={(v) => setTab(v as MainTab)} className="w-full">
-          <TabsList className="mb-5 h-11 w-full rounded-full bg-parchment p-1 sm:mb-6 sm:w-auto">
-            <TabsTrigger
-              value="search"
-              className="text-caption min-h-9 flex-1 rounded-full px-3 sm:flex-none sm:px-5"
-            >
+          <TabsList className="mb-5 h-auto w-full justify-start gap-6 rounded-none border-b border-border bg-transparent p-0 sm:mb-6">
+            <TabsTrigger value="search" className={PAGE_TAB}>
+              <Target />
               Umkreis
             </TabsTrigger>
-            <TabsTrigger
-              value="trip"
-              className="text-caption min-h-9 flex-1 rounded-full px-3 sm:flex-none sm:px-5"
-            >
-              <RouteIcon className="mr-1 size-3.5" />
+            <TabsTrigger value="trip" className={PAGE_TAB}>
+              <RouteIcon />
               Trajet
             </TabsTrigger>
-            <TabsTrigger
-              value="favorites"
-              className="text-caption min-h-9 flex-1 rounded-full px-3 sm:flex-none sm:px-5"
-            >
-              <Star className="mr-1 size-3.5" />
+            <TabsTrigger value="favorites" className={PAGE_TAB}>
+              <Star />
               Favoriten
               {favorites.favorites.length > 0 && ` (${favorites.favorites.length})`}
             </TabsTrigger>
@@ -393,7 +397,7 @@ export function HomePage() {
             <Button
               type="button"
               variant="outline"
-              className="mb-3 h-11 w-full justify-between rounded-full md:hidden"
+              className="mb-3 w-full justify-between md:hidden"
               aria-expanded={filtersOpen}
               onClick={() => setFiltersOpen((open) => !open)}
             >
@@ -407,7 +411,7 @@ export function HomePage() {
             </Button>
             <div
               className={cn(
-                "mb-6 grid gap-5 rounded-lg border border-hairline bg-pearl p-4 sm:p-5 md:grid-cols-3",
+                "mb-6 grid gap-5 rounded-md border bg-surface p-4 sm:p-5 md:grid-cols-3",
                 !filtersOpen && "hidden md:grid",
               )}
             >
@@ -421,7 +425,7 @@ export function HomePage() {
               <div>
                 <p className="text-caption mb-3 text-muted-foreground">Sortierung</p>
                 <Select value={sort} onValueChange={(v) => setSort(v as SortMode)}>
-                  <SelectTrigger className="h-11 w-full rounded-full bg-background">
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -447,7 +451,7 @@ export function HomePage() {
                     variant="ghost"
                     size="icon"
                     aria-label="Preise aktualisieren"
-                    className="size-11 shrink-0 rounded-full text-primary hover:bg-parchment hover:text-primary"
+                    className="shrink-0 rounded-full text-ink-2"
                     onClick={() => void pricesQuery.refetch()}
                     disabled={pricesQuery.isFetching || ids.length === 0}
                   >
@@ -469,7 +473,7 @@ export function HomePage() {
                           setLocateTarget("search");
                           geo.request();
                         }}
-                        className="h-11 rounded-full px-6"
+                        className="px-6"
                       >
                         Standort verwenden
                       </Button>
@@ -515,7 +519,7 @@ export function HomePage() {
                     </Suspense>
                   </ClientOnly>
                 ) : (
-                  <div className="text-caption flex h-full items-center justify-center bg-parchment text-muted-foreground">
+                  <div className="text-caption flex h-full items-center justify-center bg-surface-sunken text-muted-foreground">
                     Die Karte erscheint nach der ersten Suche.
                   </div>
                 )
@@ -574,12 +578,12 @@ export function HomePage() {
                   value={tripName}
                   onChange={(event) => setTripName(event.target.value)}
                   placeholder="Name, z. B. Zuhause → Arbeit"
-                  className="h-11 min-w-0 rounded-full bg-background sm:w-64"
+                  className="min-w-0 sm:w-64"
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 w-full rounded-full sm:w-auto"
+                  className="w-full sm:w-auto"
                   disabled={tripName.trim().length === 0}
                   onClick={() => {
                     trips.save({
@@ -610,7 +614,7 @@ export function HomePage() {
                   {corridorKm.toFixed(1).replace(".", ",")} km
                 </p>
                 <Select value={routeSort} onValueChange={(v) => setRouteSort(v as RouteSortMode)}>
-                  <SelectTrigger className="h-11 w-full rounded-full bg-background sm:w-56">
+                  <SelectTrigger className="w-full sm:w-56">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -632,15 +636,11 @@ export function HomePage() {
                     !routeQuery.isFetching &&
                     routeResult &&
                     routeStationList.length === 0 && (
-                      <div className="rounded-lg border border-hairline bg-pearl p-10 text-center">
-                        <h3 className="text-[21px] font-semibold text-ink">
-                          Keine Stationen im Korridor
-                        </h3>
-                        <p className="text-caption mt-2 text-muted-foreground">
-                          Erhöhe die Korridorbreite, um mehr Tankstellen entlang der Strecke zu
-                          finden.
-                        </p>
-                      </div>
+                      <Notice
+                        icon={<SearchX />}
+                        title="Keine Stationen im Korridor"
+                        description="Erhöhe die Korridorbreite, um mehr Tankstellen entlang der Strecke zu finden."
+                      />
                     )}
                   {!routeError && !routeQuery.isFetching && routeStationList.length > 0 && (
                     <StationList
@@ -661,16 +661,11 @@ export function HomePage() {
                     />
                   )}
                   {!routeQueryInput && !routeError && (
-                    <div className="rounded-lg border border-hairline bg-pearl p-10 text-center">
-                      <RouteIcon className="mx-auto size-7 text-muted-foreground" />
-                      <h3 className="mt-4 text-[21px] font-semibold text-ink">
-                        Tanken entlang deiner Strecke
-                      </h3>
-                      <p className="text-caption mt-2 text-muted-foreground">
-                        Gib Start und Ziel ein – wir zeigen die günstigsten Stationen im Korridor
-                        samt geschätztem Umweg.
-                      </p>
-                    </div>
+                    <Notice
+                      icon={<RouteIcon />}
+                      title="Tanken entlang deiner Strecke"
+                      description="Gib Start und Ziel ein – wir zeigen die günstigsten Stationen im Korridor samt geschätztem Umweg."
+                    />
                   )}
                 </>
               }
@@ -697,7 +692,7 @@ export function HomePage() {
                     </Suspense>
                   </ClientOnly>
                 ) : (
-                  <div className="text-caption flex h-full items-center justify-center bg-parchment text-muted-foreground">
+                  <div className="text-caption flex h-full items-center justify-center bg-surface-sunken text-muted-foreground">
                     Die Karte erscheint nach der Trajet-Suche.
                   </div>
                 )
@@ -709,13 +704,11 @@ export function HomePage() {
             {!favorites.hydrated ? (
               <StationSkeletons count={2} />
             ) : favorites.favorites.length === 0 ? (
-              <div className="rounded-lg border border-hairline bg-pearl p-10 text-center">
-                <Star className="mx-auto size-7 text-muted-foreground" />
-                <h3 className="mt-4 text-[21px] font-semibold text-ink">Noch keine Favoriten</h3>
-                <p className="text-caption mt-2 text-muted-foreground">
-                  Tippe auf den Stern einer Station, um sie hier dauerhaft zu speichern.
-                </p>
-              </div>
+              <Notice
+                icon={<Star />}
+                title="Noch keine Favoriten"
+                description="Tippe auf den Stern einer Station, um sie hier dauerhaft zu speichern."
+              />
             ) : (
               <StationList
                 stations={favorites.favorites}
@@ -736,7 +729,7 @@ export function HomePage() {
         </Tabs>
       </main>
 
-      <footer className="border-t border-hairline bg-parchment">
+      <footer className="border-t border-border bg-surface-sunken">
         <div className="text-fine mx-auto max-w-6xl px-safe pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-muted-foreground">
           Preisdaten:{" "}
           <a

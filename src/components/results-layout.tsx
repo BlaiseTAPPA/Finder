@@ -1,5 +1,5 @@
 /**
- * Ergebnis-Layout: mobil Umschalter Liste/Karte, ab md gestapelt,
+ * Ergebnis-Layout: mobil schwebender Umschalter Liste/Karte, ab md gestapelt,
  * ab lg zweispaltig mit klebender Karte.
  * Beide Ansichten bleiben montiert, damit Leaflet nicht neu initialisiert wird.
  */
@@ -13,6 +13,9 @@ interface Props {
   map: ReactNode;
   className?: string | undefined;
 }
+
+const TOGGLE =
+  "rounded-full px-5 data-[state=active]:bg-on-chrome data-[state=active]:text-chrome data-[state=active]:shadow-none";
 
 export function ResultsLayout({ list, map, className }: Props) {
   const [view, setView] = useState<"list" | "map">("list");
@@ -30,27 +33,6 @@ export function ResultsLayout({ list, map, className }: Props) {
         className,
       )}
     >
-      <div className="md:hidden">
-        <Tabs value={view} onValueChange={(v) => setView(v as "list" | "map")}>
-          <TabsList className="h-11 w-full rounded-full bg-parchment p-1">
-            <TabsTrigger
-              value="list"
-              className="text-caption min-h-9 flex-1 rounded-full data-[state=active]:bg-background"
-            >
-              <List className="mr-1.5 size-4" />
-              Liste
-            </TabsTrigger>
-            <TabsTrigger
-              value="map"
-              className="text-caption min-h-9 flex-1 rounded-full data-[state=active]:bg-background"
-            >
-              <MapIcon className="mr-1.5 size-4" />
-              Karte
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
       <div className={cn("order-2 min-w-0 lg:order-1", view === "map" && "hidden md:block")}>
         {list}
       </div>
@@ -61,9 +43,25 @@ export function ResultsLayout({ list, map, className }: Props) {
           view === "list" && "hidden md:block",
         )}
       >
-        <div className="h-[60vh] w-full overflow-hidden rounded-lg border border-hairline md:h-[55vh] lg:h-full">
+        <div className="isolate h-[60vh] w-full overflow-hidden rounded-md border md:h-[55vh] lg:h-full">
           {map}
         </div>
+      </div>
+
+      {/* Mobil: schwebender Umschalter, klebt am unteren Rand solange die Ergebnisse sichtbar sind */}
+      <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 order-3 justify-self-center md:hidden">
+        <Tabs value={view} onValueChange={(v) => setView(v as "list" | "map")}>
+          <TabsList className="h-12 rounded-full bg-chrome p-1 text-on-chrome/70 shadow-float">
+            <TabsTrigger value="list" className={TOGGLE}>
+              <List />
+              Liste
+            </TabsTrigger>
+            <TabsTrigger value="map" className={TOGGLE}>
+              <MapIcon />
+              Karte
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
     </div>
   );
