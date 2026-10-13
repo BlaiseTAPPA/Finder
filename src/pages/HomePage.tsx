@@ -35,6 +35,7 @@ import { RouteForm, type TripPoint } from "@/components/route-form";
 import { RouteFavoritesBar } from "@/components/route-favorites-bar";
 import type { CardDetour } from "@/components/station-card";
 import { ResultsLayout } from "@/components/results-layout";
+import { StartOverview, type FavoritePriceState } from "@/components/start-overview";
 import { SiteHeader, type MainTab } from "@/components/site-header";
 import { DataCredits } from "@/components/data-credits";
 import { cn } from "@/lib/utils";
@@ -305,6 +306,28 @@ export function HomePage() {
 
   const cheapestId = useMemo(() => cheapestStationId(stations, fuel), [stations, fuel]);
 
+  // ----- Startübersicht: aktuelle Preise der Favoriten, solange keine Suche aktiv ist -----
+  const favoriteIds = useMemo(
+    () => favorites.favorites.slice(0, 100).map((f) => f.id),
+    [favorites.favorites],
+  );
+  const favoritePricesQuery = useQuery({
+    queryKey: ["favorite-prices", favoriteIds],
+    enabled: center === null && favoriteIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    // Direkt statt über useServerFn aufgerufen: dessen Signatur verliert den Rückgabetyp.
+    queryFn: () => refreshPrices({ data: { ids: favoriteIds } }),
+  });
+  useEffect(() => {
+    if (favoritePricesQuery.data?.ok) favorites.syncPrices(favoritePricesQuery.data.updates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [favoritePricesQuery.data]);
+  const favoritePriceState: FavoritePriceState = favoritePricesQuery.data?.ok
+    ? { kind: "fresh", fetchedAt: favoritePricesQuery.data.fetchedAt }
+    : favoritePricesQuery.isFetching
+      ? { kind: "loading" }
+      : { kind: "stale" };
+
   const showSkeleton = listQuery.isLoading && center !== null;
 
   // ----- Trajet: Stationen im Korridor -----
@@ -504,20 +527,32 @@ export function HomePage() {
             )}
 
             <ResultsLayout
+              showToggle={center !== null}
               list={
                 <>
                   {!center && !error && (
-                    <StartState>
-                      <Button
-                        onClick={() => {
-                          setLocateTarget("search");
-                          geo.request();
-                        }}
-                        className="px-6"
-                      >
-                        Standort verwenden
-                      </Button>
-                    </StartState>
+                    <>
+                      <StartState />
+                      {favorites.hydrated && (
+                        <StartOverview
+                          favorites={favorites.favorites}
+                          fuel={fuel}
+                          priceState={favoritePriceState}
+                          trips={trips.hydrated ? trips.trips : []}
+                          onSelectFavorite={(station) => {
+                            // Umkreissuche um die Favoriten-Station, diese hervorgehoben.
+                            setCenter({ lat: station.lat, lng: station.lng });
+                            setPlaceLabel(station.name);
+                            setActiveId(station.id);
+                          }}
+                          onShowAllFavorites={() => setTab("favorites")}
+                          onSelectTrip={(trip) => {
+                            setTab("trip");
+                            applyTrip(trip);
+                          }}
+                        />
+                      )}
+                    </>
                   )}
                   {error && <ErrorState error={error} />}
                   {showSkeleton && <StationSkeletons />}
@@ -668,6 +703,7 @@ export function HomePage() {
 
             <ResultsLayout
               className="mt-6"
+              showToggle={routeQueryInput !== null}
               list={
                 <>
                   {routeError && <ErrorState error={routeError} />}
