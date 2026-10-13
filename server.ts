@@ -71,7 +71,7 @@ import {
   listTrips,
   listAlerts,
   latestPrices,
-  upsertProfile,
+  syncLocalAccountData,
   addFavorite,
   removeFavorite,
   addTrip,
@@ -489,13 +489,12 @@ app.post("/api/account/sync", async (req: Request, res: Response) => {
   }
   try {
     const data = syncSchema.parse(req.body);
-    await upsertProfile(userId, data.username ?? null, data.avatarUrl ?? null);
-    for (const station of data.favorites) {
-      await addFavorite(userId, station as unknown as Station);
-    }
-    for (const trip of data.trips) {
-      await addTrip(userId, trip as unknown as SavedTrip);
-    }
+    await syncLocalAccountData(userId, {
+      favorites: data.favorites as unknown as Station[],
+      trips: data.trips as unknown as SavedTrip[],
+      username: data.username ?? null,
+      avatarUrl: data.avatarUrl ?? null,
+    });
     res.json({ ok: true });
   } catch (error) {
     console.error("[account/sync] Erreur :", error);
