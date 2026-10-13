@@ -86,8 +86,6 @@ export function StationCard({
         active && "border-border-strong bg-surface-sunken/60",
       )}
     >
-      {cheapest && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-price-low" />}
-
       {/* Preis zuerst: ausgewählte Sorte groß, Entfernung rechts daneben */}
       <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-x-3">
         <div className="min-w-0">
