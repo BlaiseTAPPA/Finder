@@ -24,7 +24,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { reportPrice } from "@/lib/community.functions";
 import { RESULT_MESSAGES } from "@/lib/community-input";
-import { FUEL_LABELS, FUEL_TYPES, type Coords, type FuelType, type Station } from "@/types/station";
+import {
+  FUEL_LABELS,
+  FUEL_TYPES,
+  formatAddress,
+  type Coords,
+  type FuelType,
+  type Station,
+} from "@/types/station";
 
 interface Props {
   station: Station | null;
@@ -99,9 +106,17 @@ export function ReportPriceDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Preis melden</DialogTitle>
-          <DialogDescription>
-            {station?.name} · Der angezeigte Preis stammt von Tankerkönig (offizielle Meldung der
-            Station). Deine Meldung ergänzt ihn nur als Community-Hinweis und ändert ihn nicht.
+          {station && (
+            <p className="text-body font-semibold text-foreground">
+              {station.name}
+              <span className="text-caption block font-normal text-ink-2">
+                {station.brand} · {formatAddress(station)}
+              </span>
+            </p>
+          )}
+          <DialogDescription className="text-caption text-ink-2">
+            Der angezeigte Preis stammt von Tankerkönig (offizielle Meldung der Station). Deine
+            Meldung ergänzt ihn nur als Community-Hinweis und ändert ihn nicht.
           </DialogDescription>
         </DialogHeader>
 
