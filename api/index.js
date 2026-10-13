@@ -439,6 +439,8 @@ init_env_server();
 init_tankerkoenig();
 import express from "express";
 import path2 from "path";
+import { ZodError } from "zod";
+import { waitUntil } from "@vercel/functions";
 
 // src/lib/route-input.ts
 import { z as z2 } from "zod";
@@ -466,7 +468,7 @@ var fuel = z3.enum(["e5", "e10", "diesel"]);
 var historyInputSchema = z3.object({
   stationId: z3.string().min(1).max(64),
   fuelType: fuel,
-  days: z3.union([z3.literal(7), z3.literal(14), z3.literal(30)]).default(7)
+  rangeDays: z3.union([z3.literal(7), z3.literal(15), z3.literal(30)]).default(7)
 });
 var trendInputSchema = z3.object({
   stationId: z3.string().min(1).max(64),
@@ -570,8 +572,119 @@ var toggleAlertSchema = z5.object({
 // server.ts
 init_tankerkoenig_server();
 
+// src/lib/trend.ts
+var MIN_DISTINCT_DAYS = 4;
+var MIN_SAMPLES = 20;
+var round3 = (v) => Math.round(v * 1e3) / 1e3;
+var berlin = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Berlin",
+  hour12: false,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit"
+});
+function berlinParts(ms) {
+  const parts = berlin.formatToParts(new Date(ms));
+  const get = (type) => parts.find((p) => p.type === type)?.value ?? "0";
+  const hour = Number(get("hour")) % 24;
+  return { day: `${get("year")}-${get("month")}-${get("day")}`, hour };
+}
+function percentileOf(values, value) {
+  if (values.length === 0) return 50;
+  const below = values.filter((v) => v < value).length;
+  const equal = values.filter((v) => v === value).length;
+  return (below + equal / 2) / values.length * 100;
+}
+function classify(percentile) {
+  if (percentile < 25) return "low";
+  if (percentile > 75) return "high";
+  return "mid";
+}
+function hourlyPattern(points) {
+  const buckets = /* @__PURE__ */ new Map();
+  for (const p of points) {
+    const { hour } = berlinParts(p.t);
+    const b = buckets.get(hour) ?? { sum: 0, n: 0 };
+    b.sum += p.price;
+    b.n += 1;
+    buckets.set(hour, b);
+  }
+  return [...buckets.entries()].map(([hour, b]) => ({ hour, avg: round3(b.sum / b.n), samples: b.n })).sort((a, b) => a.hour - b.hour);
+}
+function extremes(hourly) {
+  const solid = hourly.filter((h) => h.samples >= 2);
+  if (solid.length < 4) return { trough: null, peak: null };
+  let trough = solid[0];
+  let peak = solid[0];
+  for (const h of solid) {
+    if (h.avg < trough.avg) trough = h;
+    if (h.avg > peak.avg) peak = h;
+  }
+  return { trough, peak };
+}
+var hoursUntil = (from, to) => (to - from + 24) % 24;
+function computeTrend({
+  fuel: fuel4,
+  days,
+  points,
+  current,
+  now = Date.now()
+}) {
+  const prices = points.map((p) => p.price);
+  const distinctDays = new Set(points.map((p) => berlinParts(p.t).day)).size;
+  const confident = distinctDays >= MIN_DISTINCT_DAYS && points.length >= MIN_SAMPLES;
+  const base = {
+    fuel: fuel4,
+    days,
+    samples: points.length,
+    distinctDays,
+    confident,
+    current,
+    min: prices.length ? round3(Math.min(...prices)) : null,
+    max: prices.length ? round3(Math.max(...prices)) : null,
+    avg: prices.length ? round3(prices.reduce((a, b) => a + b, 0) / prices.length) : null,
+    percentile: null,
+    classification: null,
+    hourly: hourlyPattern(points),
+    troughHour: null,
+    peakHour: null,
+    recommendation: null
+  };
+  if (current !== null && prices.length >= 5) {
+    const percentile = Math.round(percentileOf(prices, current));
+    base.percentile = percentile;
+    base.classification = classify(percentile);
+  }
+  const { trough, peak } = extremes(base.hourly);
+  base.troughHour = trough?.hour ?? null;
+  base.peakHour = peak?.hour ?? null;
+  if (!confident || !trough || !peak) return base;
+  const nowHour = berlinParts(now).hour;
+  const untilTrough = hoursUntil(nowHour, trough.hour);
+  const spread = peak.avg - trough.avg;
+  if (spread < 0.02) return base;
+  if (untilTrough <= 1 || untilTrough >= 23) {
+    base.recommendation = {
+      kind: "good-now",
+      hour: trough.hour,
+      text: "Guter Zeitpunkt \u2013 du bist im \xFCblichen Tagestief."
+    };
+  } else if (untilTrough <= 6) {
+    base.recommendation = {
+      kind: "wait",
+      hour: trough.hour,
+      text: `Der Preis f\xE4llt \xFCblicherweise gegen ${trough.hour} Uhr \u2013 wenn m\xF6glich warten.`
+    };
+  }
+  return base;
+}
+
 // src/lib/price-history.server.ts
 var FUELS = ["e5", "e10", "diesel"];
+var MINUTE = 60 * 1e3;
+var HOUR = 60 * MINUTE;
+var DAY = 24 * HOUR;
 async function admin() {
   const { supabaseAdmin: supabaseAdmin2 } = await Promise.resolve().then(() => (init_client_server(), client_server_exports));
   return supabaseAdmin2;
@@ -597,9 +710,57 @@ async function upsertSeenStations(stations) {
       last_seen_at: (/* @__PURE__ */ new Date()).toISOString()
     }));
     const { error } = await db.from("stations").upsert(rows, { onConflict: "id" });
-    if (error) console.warn("[price-history] upsertSeenStations \xFCbersprungen:", error.message);
+    if (error) {
+      console.warn("[price-history] upsertSeenStations \xFCbersprungen:", error.message);
+      return;
+    }
+    await recordSeenPrices(stations.slice(0, 200));
   } catch (err) {
     console.warn("[price-history] upsertSeenStations Fehler:", err?.message || err);
+  }
+}
+var recentlyRecorded = /* @__PURE__ */ new Map();
+var RECORD_THROTTLE_MS = 10 * MINUTE;
+var KNOWN_CHUNK = 20;
+async function latestPrices(ids) {
+  const db = await admin();
+  const since = new Date(Date.now() - DAY).toISOString();
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += KNOWN_CHUNK) chunks.push(ids.slice(i, i + KNOWN_CHUNK));
+  const results = await Promise.all(
+    chunks.map(
+      (chunk) => db.from("price_history").select("station_id, fuel_type, price").in("station_id", chunk).gte("recorded_at", since).order("recorded_at", { ascending: false }).limit(1e3)
+    )
+  );
+  const map = /* @__PURE__ */ new Map();
+  for (const { data, error } of results) {
+    if (error) throw new Error(error.message);
+    for (const row of data ?? []) {
+      const key = `${row.station_id}:${row.fuel_type}`;
+      if (!map.has(key)) map.set(key, Number(row.price));
+    }
+  }
+  return map;
+}
+async function recordSeenPrices(stations) {
+  const now = Date.now();
+  const due = stations.filter((s) => {
+    const last = recentlyRecorded.get(s.id);
+    return (last === void 0 || now - last > RECORD_THROTTLE_MS) && FUELS.some((fuel4) => s.prices[fuel4] !== null);
+  });
+  if (due.length === 0) return;
+  const known = await latestPrices(due.map((s) => s.id));
+  const rows = diffRows(
+    due.map((s) => ({ stationId: s.id, prices: s.prices })),
+    known,
+    new Date(now)
+  );
+  await insertHistoryRows(rows);
+  for (const s of due) recentlyRecorded.set(s.id, now);
+  if (recentlyRecorded.size > 5e3) {
+    for (const [id, at] of recentlyRecorded) {
+      if (now - at > RECORD_THROTTLE_MS) recentlyRecorded.delete(id);
+    }
   }
 }
 async function readHistory(stationId2, fuel4, days) {
@@ -614,6 +775,73 @@ async function readHistory(stationId2, fuel4, days) {
     t: new Date(row.recorded_at).getTime(),
     price: Number(row.price)
   }));
+}
+var SAMPLE_STEP_MS = 10 * MINUTE;
+var CARRY_FORWARD_MS = 48 * HOUR;
+function rangeDayKeys(rangeDays, now = Date.now()) {
+  const [y, m, d] = berlinParts(now).day.split("-").map(Number);
+  const keys = [];
+  for (let i = rangeDays - 1; i >= 0; i--) {
+    keys.push(new Date(Date.UTC(y, m - 1, d - i)).toISOString().slice(0, 10));
+  }
+  return keys;
+}
+function aggregateDaily(points, rangeDays, now = Date.now()) {
+  if (points.length === 0) return [];
+  const sorted = [...points].sort((a, b) => a.t - b.t);
+  const keys = new Set(rangeDayKeys(rangeDays, now));
+  const buckets = /* @__PURE__ */ new Map();
+  const start = Math.max(sorted[0].t, now - (rangeDays + 1) * DAY);
+  let idx = 0;
+  for (let t = start; t <= now; t += SAMPLE_STEP_MS) {
+    while (idx + 1 < sorted.length && sorted[idx + 1].t <= t) idx++;
+    const current = sorted[idx];
+    if (current.t > t || t - current.t > CARRY_FORWARD_MS) continue;
+    const { day } = berlinParts(t);
+    if (!keys.has(day)) continue;
+    const bucket = buckets.get(day) ?? { sum: 0, n: 0 };
+    bucket.sum += current.price;
+    bucket.n += 1;
+    buckets.set(day, bucket);
+  }
+  return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, b]) => ({ date, price: Math.round(b.sum / b.n * 1e3) / 1e3 }));
+}
+var historyCache = /* @__PURE__ */ new Map();
+var HISTORY_CACHE_TTL_MS = 5 * MINUTE;
+var HISTORY_CACHE_MAX = 500;
+async function getStationPriceHistory(stationId2, fuelType, rangeDays) {
+  const cacheKey = `${stationId2}:${fuelType}:${rangeDays}`;
+  const cached = historyCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) return cached.value;
+  const now = Date.now();
+  const db = await admin();
+  const since = new Date(now - (rangeDays + 1) * DAY - CARRY_FORWARD_MS).toISOString();
+  const { data, error } = await db.from("price_history").select("price, recorded_at").eq("station_id", stationId2).eq("fuel_type", fuelType).gte("recorded_at", since).order("recorded_at", { ascending: true }).limit(5e3);
+  if (error) throw new Error(error.message);
+  const raw = (data ?? []).map((row) => ({
+    t: new Date(row.recorded_at).getTime(),
+    price: Number(row.price)
+  }));
+  const daily = aggregateDaily(raw, rangeDays, now);
+  const keys = rangeDayKeys(rangeDays, now);
+  if (daily.length < keys.length) {
+    const present = new Set(daily.map((p) => p.date));
+    const { data: compacted, error: dailyError } = await db.from("price_daily").select("day, avg_price").eq("station_id", stationId2).eq("fuel_type", fuelType).gte("day", keys[0]).lte("day", keys[keys.length - 1]);
+    if (dailyError) {
+      console.warn("[price-history] price_daily nicht verf\xFCgbar:", dailyError.message);
+    } else {
+      for (const row of compacted ?? []) {
+        if (!present.has(row.day)) daily.push({ date: row.day, price: Number(row.avg_price) });
+      }
+      daily.sort((a, b) => a.date.localeCompare(b.date));
+    }
+  }
+  if (historyCache.size >= HISTORY_CACHE_MAX) {
+    const oldest = historyCache.keys().next().value;
+    if (oldest !== void 0) historyCache.delete(oldest);
+  }
+  historyCache.set(cacheKey, { expires: now + HISTORY_CACHE_TTL_MS, value: daily });
+  return daily;
 }
 async function collectablePool(limit, afterId) {
   const db = await admin();
@@ -962,114 +1190,6 @@ async function searchPlaces(query) {
   return value;
 }
 
-// src/lib/trend.ts
-var MIN_DISTINCT_DAYS = 4;
-var MIN_SAMPLES = 20;
-var round3 = (v) => Math.round(v * 1e3) / 1e3;
-var berlin = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Europe/Berlin",
-  hour12: false,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit"
-});
-function berlinParts(ms) {
-  const parts = berlin.formatToParts(new Date(ms));
-  const get = (type) => parts.find((p) => p.type === type)?.value ?? "0";
-  const hour = Number(get("hour")) % 24;
-  return { day: `${get("year")}-${get("month")}-${get("day")}`, hour };
-}
-function percentileOf(values, value) {
-  if (values.length === 0) return 50;
-  const below = values.filter((v) => v < value).length;
-  const equal = values.filter((v) => v === value).length;
-  return (below + equal / 2) / values.length * 100;
-}
-function classify(percentile) {
-  if (percentile < 25) return "low";
-  if (percentile > 75) return "high";
-  return "mid";
-}
-function hourlyPattern(points) {
-  const buckets = /* @__PURE__ */ new Map();
-  for (const p of points) {
-    const { hour } = berlinParts(p.t);
-    const b = buckets.get(hour) ?? { sum: 0, n: 0 };
-    b.sum += p.price;
-    b.n += 1;
-    buckets.set(hour, b);
-  }
-  return [...buckets.entries()].map(([hour, b]) => ({ hour, avg: round3(b.sum / b.n), samples: b.n })).sort((a, b) => a.hour - b.hour);
-}
-function extremes(hourly) {
-  const solid = hourly.filter((h) => h.samples >= 2);
-  if (solid.length < 4) return { trough: null, peak: null };
-  let trough = solid[0];
-  let peak = solid[0];
-  for (const h of solid) {
-    if (h.avg < trough.avg) trough = h;
-    if (h.avg > peak.avg) peak = h;
-  }
-  return { trough, peak };
-}
-var hoursUntil = (from, to) => (to - from + 24) % 24;
-function computeTrend({
-  fuel: fuel4,
-  days,
-  points,
-  current,
-  now = Date.now()
-}) {
-  const prices = points.map((p) => p.price);
-  const distinctDays = new Set(points.map((p) => berlinParts(p.t).day)).size;
-  const confident = distinctDays >= MIN_DISTINCT_DAYS && points.length >= MIN_SAMPLES;
-  const base = {
-    fuel: fuel4,
-    days,
-    samples: points.length,
-    distinctDays,
-    confident,
-    current,
-    min: prices.length ? round3(Math.min(...prices)) : null,
-    max: prices.length ? round3(Math.max(...prices)) : null,
-    avg: prices.length ? round3(prices.reduce((a, b) => a + b, 0) / prices.length) : null,
-    percentile: null,
-    classification: null,
-    hourly: hourlyPattern(points),
-    troughHour: null,
-    peakHour: null,
-    recommendation: null
-  };
-  if (current !== null && prices.length >= 5) {
-    const percentile = Math.round(percentileOf(prices, current));
-    base.percentile = percentile;
-    base.classification = classify(percentile);
-  }
-  const { trough, peak } = extremes(base.hourly);
-  base.troughHour = trough?.hour ?? null;
-  base.peakHour = peak?.hour ?? null;
-  if (!confident || !trough || !peak) return base;
-  const nowHour = berlinParts(now).hour;
-  const untilTrough = hoursUntil(nowHour, trough.hour);
-  const spread = peak.avg - trough.avg;
-  if (spread < 0.02) return base;
-  if (untilTrough <= 1 || untilTrough >= 23) {
-    base.recommendation = {
-      kind: "good-now",
-      hour: trough.hour,
-      text: "Guter Zeitpunkt \u2013 du bist im \xFCblichen Tagestief."
-    };
-  } else if (untilTrough <= 6) {
-    base.recommendation = {
-      kind: "wait",
-      hour: trough.hour,
-      text: `Der Preis f\xE4llt \xFCblicherweise gegen ${trough.hour} Uhr \u2013 wenn m\xF6glich warten.`
-    };
-  }
-  return base;
-}
-
 // src/lib/community.ts
 var WINDOW_HOURS = 48;
 var HALF_LIFE_HOURS = 12;
@@ -1150,7 +1270,7 @@ async function admin2() {
   const { supabaseAdmin: supabaseAdmin2 } = await Promise.resolve().then(() => (init_client_server(), client_server_exports));
   return supabaseAdmin2;
 }
-var HOUR = 36e5;
+var HOUR2 = 36e5;
 async function stationCoords(stationId2) {
   const db = await admin2();
   const { data, error } = await db.from("stations").select("lat, lng").eq("id", stationId2).maybeSingle();
@@ -1159,7 +1279,7 @@ async function stationCoords(stationId2) {
 }
 async function overDailyLimit(contributorId2, max) {
   const db = await admin2();
-  const since = new Date(Date.now() - 24 * HOUR).toISOString();
+  const since = new Date(Date.now() - 24 * HOUR2).toISOString();
   const [reports, confirmations] = await Promise.all([
     db.from("price_reports").select("id", { count: "exact", head: true }).eq("contributor_id", contributorId2).gte("created_at", since),
     db.from("price_confirmations").select("id", { count: "exact", head: true }).eq("contributor_id", contributorId2).gte("created_at", since)
@@ -1168,7 +1288,7 @@ async function overDailyLimit(contributorId2, max) {
 }
 async function actedRecently(table, contributorId2, stationId2, fuelType, hours) {
   const db = await admin2();
-  const since = new Date(Date.now() - hours * HOUR).toISOString();
+  const since = new Date(Date.now() - hours * HOUR2).toISOString();
   const { count } = await db.from(table).select("id", { count: "exact", head: true }).eq("contributor_id", contributorId2).eq("station_id", stationId2).eq("fuel_type", fuelType).gte("created_at", since);
   return (count ?? 0) > 0;
 }
@@ -1187,7 +1307,7 @@ async function readActivity(stationIds, fuelType) {
   const reports = /* @__PURE__ */ new Map();
   if (stationIds.length === 0) return { confirmations, reports };
   const db = await admin2();
-  const since = new Date(Date.now() - WINDOW_HOURS * HOUR).toISOString();
+  const since = new Date(Date.now() - WINDOW_HOURS * HOUR2).toISOString();
   const ids = stationIds.slice(0, 60);
   const [conf, rep] = await Promise.all([
     db.from("price_confirmations").select("station_id, created_at").in("station_id", ids).eq("fuel_type", fuelType).gte("created_at", since).limit(5e3),
@@ -1316,7 +1436,7 @@ async function deleteAlert(clerkUserId, id) {
   const db = await admin3();
   await db.from("price_alerts").delete().eq("clerk_user_id", clerkUserId).eq("id", id);
 }
-async function latestPrices(stationIds) {
+async function latestPrices2(stationIds) {
   if (stationIds.length === 0) return {};
   const db = await admin3();
   const { data } = await db.from("price_history").select("station_id, fuel_type, price, recorded_at").in("station_id", stationIds).order("recorded_at", { ascending: false }).limit(500);
@@ -1354,8 +1474,10 @@ app.post("/api/stations/list", async (req, res) => {
     const data = listInputSchema.parse(req.body);
     const stations = await fetchStations(data);
     if (stations.length > 0) {
-      upsertSeenStations(stations).catch(
-        (err) => console.warn("[DB] Enregistrement d'historique ignor\xE9 :", err?.message || err)
+      waitUntil(
+        upsertSeenStations(stations).catch(
+          (err) => console.warn("[DB] Enregistrement d'historique ignor\xE9 :", err?.message || err)
+        )
       );
     }
     res.json({ ok: true, stations, fetchedAt: Date.now() });
@@ -1439,8 +1561,10 @@ app.post("/api/routes/stations", async (req, res) => {
     const data = routeStationsInputSchema.parse(req.body);
     const route = await planRouteServer(data.origin, data.destination);
     const stations = await collectRouteStations(route, data.corridorKm, data.fuelType);
-    upsertSeenStations(stations.map((entry) => entry.station)).catch(
-      (err) => console.warn("[route] upsertSeenStations \xFCbersprungen:", err?.message || err)
+    waitUntil(
+      upsertSeenStations(stations.map((entry) => entry.station)).catch(
+        (err) => console.warn("[route] upsertSeenStations \xFCbersprungen:", err?.message || err)
+      )
     );
     res.json({ ok: true, route, stations, fetchedAt: Date.now() });
   } catch (error) {
@@ -1467,12 +1591,16 @@ app.post("/api/routes/suggest", async (req, res) => {
 app.post("/api/trends/history", async (req, res) => {
   try {
     const data = historyInputSchema.parse(req.body);
-    const points = await readHistory(data.stationId, data.fuelType, data.days);
+    const points = await getStationPriceHistory(data.stationId, data.fuelType, data.rangeDays);
     const avg = points.length > 0 ? Math.round(points.reduce((sum, p) => sum + p.price, 0) / points.length * 1e3) / 1e3 : null;
-    res.json({ points, avg, days: data.days });
+    res.json({ points, avg, rangeDays: data.rangeDays });
   } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ error: "Ung\xFCltige Eingabe" });
+      return;
+    }
     console.error("[trends/history] Erreur :", error);
-    res.json({ points: [], avg: null, days: req.body?.days ?? 7 });
+    res.status(500).json({ error: "Preisverlauf nicht verf\xFCgbar" });
   }
 });
 app.post("/api/trends/trend", async (req, res) => {
@@ -1647,7 +1775,7 @@ app.get("/api/account", async (req, res) => {
       listTrips(userId),
       listAlerts(userId)
     ]);
-    const prices = await latestPrices([...new Set(alerts.map((a) => a.stationId))]);
+    const prices = await latestPrices2([...new Set(alerts.map((a) => a.stationId))]);
     res.json({
       favorites,
       trips,
@@ -1823,7 +1951,15 @@ var runPriceCollection = async () => {
     return { ok: false, paused: quota, error: message };
   }
 };
-app.all("/api/public/cron/collect-prices", async (_req, res) => {
+app.all("/api/public/cron/collect-prices", async (req, res) => {
+  const cronSecret = process.env["CRON_SECRET"];
+  if (cronSecret) {
+    const provided = req.headers["x-cron-secret"] ?? req.headers["authorization"]?.replace(/^Bearer\s+/i, "");
+    if (provided !== cronSecret) {
+      res.status(401).json({ ok: false, error: "unauthorized" });
+      return;
+    }
+  }
   try {
     const result = await runPriceCollection();
     res.json(result);

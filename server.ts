@@ -661,7 +661,18 @@ const runPriceCollection = async () => {
   }
 };
 
-app.all("/api/public/cron/collect-prices", async (_req: Request, res: Response) => {
+app.all("/api/public/cron/collect-prices", async (req: Request, res: Response) => {
+  // Si CRON_SECRET est défini, seul l'appelant planifié (pg_cron) peut déclencher la collecte.
+  const cronSecret = process.env["CRON_SECRET"];
+  if (cronSecret) {
+    const provided =
+      (req.headers["x-cron-secret"] as string | undefined) ??
+      req.headers["authorization"]?.replace(/^Bearer\s+/i, "");
+    if (provided !== cronSecret) {
+      res.status(401).json({ ok: false, error: "unauthorized" });
+      return;
+    }
+  }
   try {
     const result = await runPriceCollection();
     res.json(result);
