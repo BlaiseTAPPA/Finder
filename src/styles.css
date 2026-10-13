@@ -71,7 +71,7 @@
   --surface-sunken: oklch(0.955 0.003 250);
   --border: oklch(0.9 0.004 250);
   --border-strong: oklch(0.8 0.006 250);
-  --input: oklch(0.86 0.005 250);
+  --input: oklch(0.64 0.01 250); /* 3:1 field boundary (WCAG 1.4.11) */
 
   /* ink */
   --foreground: oklch(0.2 0.01 250);
@@ -88,10 +88,10 @@
   --primary: oklch(0.5 0.15 255); /* interactive only */
   --primary-foreground: oklch(1 0 0);
   --ring: oklch(0.56 0.16 255);
-  --price-low: oklch(0.52 0.13 150);
+  --price-low: oklch(0.49 0.13 150);
   --price-mid: oklch(0.6 0.12 75);
   --price-high: oklch(0.54 0.18 28);
-  --favorite: oklch(0.76 0.15 80);
+  --favorite: oklch(0.66 0.15 70); /* 3:1 on white for the filled star */
   --route: var(--primary);
   --scrim: oklch(0.15 0.01 250 / 0.55);
   --chrome: oklch(0.2 0.01 250);
@@ -105,7 +105,7 @@
 
   --destructive: oklch(0.54 0.19 27);
   --destructive-foreground: oklch(1 0 0);
-  --success: oklch(0.52 0.13 150);
+  --success: oklch(0.49 0.13 150);
   --success-foreground: oklch(1 0 0);
 }
 
@@ -119,7 +119,7 @@
     --surface-sunken: oklch(0.25 0.008 250);
     --border: oklch(0.3 0.008 250);
     --border-strong: oklch(0.42 0.01 250);
-    --input: oklch(0.36 0.01 250);
+    --input: oklch(0.55 0.01 250);
 
     --foreground: oklch(0.95 0.004 250);
     --ink-2: oklch(0.8 0.006 250);
@@ -179,6 +179,27 @@
   h3 {
     font-weight: 600;
     letter-spacing: -0.01em;
+  }
+
+  /* Sichtbarer Tastaturfokus für alles ohne eigenen Ring (Primitives setzen outline-none). */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  .bg-chrome :focus-visible {
+    outline-color: var(--color-on-chrome);
+  }
+
+  /* Bewegung reduzieren; Ladespinner bleiben als Statusanzeige erhalten. */
+  @media (prefers-reduced-motion: reduce) {
+    *:not(.animate-spin),
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

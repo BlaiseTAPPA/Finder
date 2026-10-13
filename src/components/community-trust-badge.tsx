@@ -25,7 +25,7 @@ export function CommunityTrustBadge({ status }: { status: CommunityStatus | unde
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant={confirmed ? "positive" : "negative"} className="cursor-help">
+          <Badge variant={confirmed ? "positive" : "negative"} tabIndex={0} className="cursor-help">
             <Icon aria-hidden />
             {confirmed ? "Kürzlich bestätigt" : "Preis angezweifelt"}
           </Badge>

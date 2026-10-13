@@ -26,7 +26,7 @@ export function TrendBadge({ trend }: { trend: TrendSummary | undefined }) {
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant={VARIANTS[kind]} className="cursor-help">
+          <Badge variant={VARIANTS[kind]} tabIndex={0} className="cursor-help">
             {LABELS[kind]}
           </Badge>
         </TooltipTrigger>

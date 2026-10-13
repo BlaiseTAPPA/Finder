@@ -5,6 +5,7 @@ import {
   useUser as useClerkUser,
 } from "@clerk/clerk-react";
 import { useAccountSync } from "./favorites";
+import { clerkAppearance } from "./clerk-appearance";
 
 export interface SafeAuthState {
   isLoaded: boolean;
@@ -112,7 +113,11 @@ export function AppAuthProvider({
 }) {
   if (publishableKey) {
     return (
-      <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/">
+      <ClerkProvider
+        publishableKey={publishableKey}
+        afterSignOutUrl="/"
+        appearance={clerkAppearance}
+      >
         <ClerkBridge>{children}</ClerkBridge>
       </ClerkProvider>
     );
