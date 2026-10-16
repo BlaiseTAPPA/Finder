@@ -1,10 +1,10 @@
 # 0002 · Fuel budget, phase 1: vehicle, budget and fill-up log
 
-|            |                         |
-| ---------- | ----------------------- |
-| **Status** | In progress             |
-| **Branch** | `feat/0002-fuel-budget` |
-| **PR**     | —                       |
+|            |                                                      |
+| ---------- | ---------------------------------------------------- |
+| **Status** | Done                                                 |
+| **Branch** | `feat/0002-fuel-budget`                              |
+| **PR**     | [#10](https://github.com/BlaiseTAPPA/Finder/pull/10) |
 
 ### 1. Goal
 
