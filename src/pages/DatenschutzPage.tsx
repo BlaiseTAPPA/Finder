@@ -111,12 +111,11 @@ export function DatenschutzPage() {
         <p>
           Die App speichert im lokalen Speicher deines Browsers (localStorage): Favoriten,
           gespeicherte Strecken, eine zufällige Kennung für Preismeldungen, ob du die
-          Fahrzeugabfrage übersprungen hast, an welchen der letzten Tage du die App genutzt hast und
-          ob du den Installationshinweis ausgeblendet oder die App installiert hast. Die letzte
-          Suche liegt nur für die laufende Sitzung im sessionStorage. Für die Offline-Nutzung
-          speichert ein Service Worker Programmdateien. Diese Speicherungen sind für die von dir
-          genutzten Funktionen unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Du kannst sie
-          jederzeit über die Browser-Einstellungen löschen.
+          Fahrzeugabfrage übersprungen hast und ob du den Installationshinweis ausgeblendet oder die
+          App installiert hast. Die letzte Suche liegt nur für die laufende Sitzung im
+          sessionStorage. Für die Offline-Nutzung speichert ein Service Worker Programmdateien.
+          Diese Speicherungen sind für die von dir genutzten Funktionen unbedingt erforderlich (§ 25
+          Abs. 2 Nr. 2 TDDDG). Du kannst sie jederzeit über die Browser-Einstellungen löschen.
         </p>
       </LegalSection>
 

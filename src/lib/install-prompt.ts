@@ -5,16 +5,12 @@
 import { useEffect, useState } from "react";
 
 const DAY_MS = 86_400_000;
-/** Ab dem wievielten Nutzungstag der Hinweis erscheint. */
-export const MIN_DAYS_OF_USE = 2;
 /** Nach "Später" so lange nicht mehr zeigen. */
 export const SNOOZE_MS = 30 * DAY_MS;
 
 export type InstallMethod = "prompt" | "ios" | null;
 
 export interface InstallState {
-  /** Unterschiedliche Kalendertage mit Nutzung. */
-  daysOfUse: number;
   dismissedAt: number | null;
   installed: boolean;
 }
@@ -27,7 +23,6 @@ export function shouldOfferInstall(
   now: number,
 ): boolean {
   if (method === null || standalone || state.installed) return false;
-  if (state.daysOfUse < MIN_DAYS_OF_USE) return false;
   return state.dismissedAt === null || now - state.dismissedAt >= SNOOZE_MS;
 }
 
@@ -44,7 +39,6 @@ export function isIosSafari(userAgent: string, maxTouchPoints: number): boolean 
 const KEY = "tankstellen:install";
 
 interface Stored {
-  days: string[];
   dismissedAt: number | null;
   installed: boolean;
 }
@@ -53,12 +47,11 @@ function readStored(): Stored {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null") as Partial<Stored> | null;
     return {
-      days: Array.isArray(raw?.days) ? raw.days.filter((d) => typeof d === "string") : [],
       dismissedAt: typeof raw?.dismissedAt === "number" ? raw.dismissedAt : null,
       installed: raw?.installed === true,
     };
   } catch {
-    return { days: [], dismissedAt: null, installed: false };
+    return { dismissedAt: null, installed: false };
   }
 }
 
@@ -70,17 +63,9 @@ function writeStored(value: Stored) {
   }
 }
 
-/** Heutigen Tag als Nutzungstag vermerken (höchstens die letzten Tage behalten). */
-export function recordDayOfUse(now: number): InstallState {
-  const stored = readStored();
-  const today = new Date(now).toISOString().slice(0, 10);
-  if (!stored.days.includes(today)) stored.days = [...stored.days, today].slice(-MIN_DAYS_OF_USE);
-  writeStored(stored);
-  return {
-    daysOfUse: stored.days.length,
-    dismissedAt: stored.dismissedAt,
-    installed: stored.installed,
-  };
+/** Gespeicherter Stand (nach "Später" bzw. nach der Installation). */
+export function readInstallState(): InstallState {
+  return readStored();
 }
 
 export function dismissInstall(now: number) {

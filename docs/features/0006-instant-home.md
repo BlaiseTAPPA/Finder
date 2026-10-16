@@ -32,7 +32,7 @@ Fuel apps are opened at a red light or in the car park, with a single question: 
 - A small, dismissible banner above the results: "Tankfinder installieren – öffnet direkt mit den Preisen in deiner Nähe."
   - **Android / Chromium:** "Installieren" opens the browser's install dialog (`beforeinstallprompt`).
   - **iPhone / iPad (Safari):** short instructions: "Teilen" → "Zum Home-Bildschirm".
-- **When:** only from the user's **second day of use**, never when already installed (standalone), and not again for 30 days after "Später". Never after the app was installed.
+- **When:** **right away**, on the first visit (the user's choice), never when already installed (standalone), and not again for 30 days after "Später". Never after the app was installed.
 - Pure eligibility logic in `src/lib/install-prompt.ts`, unit-tested.
 
 **Home screen shortcuts** (web app manifest)
@@ -41,7 +41,7 @@ Fuel apps are opened at a red light or in the car park, with a single question: 
 - "Favoriten" → `/?tab=favoriten`.
 - The parameters are read once and removed from the URL.
 
-**Privacy policy:** `/datenschutz` lists the new local storage entries (days of use, install banner dismissed).
+**Privacy policy:** `/datenschutz` lists the new local storage entries (install banner dismissed or app installed).
 
 ### 3. Constraints
 
@@ -59,7 +59,7 @@ Fuel apps are opened at a red light or in the car park, with a single question: 
 - [ ] With the permission denied, the start screen explains how to search by place.
 - [ ] A restored session (back from `/budget`) keeps its search instead of re-locating.
 - [ ] Once results are shown, the headline is hidden visually but still present for screen readers.
-- [ ] The install banner appears from the second day of use in Chrome on Android (with the install dialog) and in Safari on iOS (with instructions); never in the installed app; not again for 30 days after "Später".
+- [ ] The install banner appears right away in Chrome on Android (with the install dialog) and in Safari on iOS (with instructions); never in the installed app; not again for 30 days after "Später".
 - [ ] The "In der Nähe" and "Favoriten" shortcuts open the right view, and the URL is cleaned.
 - [ ] `/datenschutz` mentions the new local storage entries.
 - [ ] `npm run typecheck`, `npm run lint` and `npm test` pass.

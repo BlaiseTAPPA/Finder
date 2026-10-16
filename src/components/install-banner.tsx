@@ -1,6 +1,6 @@
 /**
- * Hinweis "Tankfinder installieren" (Feature 0006): ab dem zweiten Nutzungstag, nie in der
- * installierten App, 30 Tage Pause nach "Später". Android/Chromium öffnet den Browser-Dialog,
+ * Hinweis "Tankfinder installieren" (Feature 0006): sofort sichtbar, nie in der installierten
+ * App, 30 Tage Pause nach "Später". Android/Chromium öffnet den Browser-Dialog,
  * iOS-Safari bekommt eine kurze Anleitung.
  */
 import { useEffect, useState } from "react";
@@ -10,7 +10,7 @@ import {
   dismissInstall,
   isStandalone,
   promptInstall,
-  recordDayOfUse,
+  readInstallState,
   shouldOfferInstall,
   useInstallMethod,
   type InstallState,
@@ -21,9 +21,9 @@ export function InstallBanner({ className }: { className?: string | undefined })
   const [state, setState] = useState<InstallState | null>(null);
   const [hidden, setHidden] = useState(false);
 
-  // Nutzungstag einmal pro Seitenaufruf vermerken (nur im Browser).
+  // Erst im Browser lesen (localStorage), damit der erste Render stabil bleibt.
   useEffect(() => {
-    setState(recordDayOfUse(Date.now()));
+    setState(readInstallState());
   }, []);
 
   if (hidden || !state || !shouldOfferInstall(state, method, isStandalone(), Date.now())) {
