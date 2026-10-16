@@ -15,7 +15,7 @@ import { FillUpDialog } from "@/components/fill-up-dialog";
 import { PriceFigure } from "@/components/price-figure";
 import { Notice } from "@/components/states";
 import { VehicleForm } from "@/components/vehicle-form";
-import { deleteFuelLog, saveBudget } from "@/lib/account.functions";
+import { deleteBudget, deleteFuelLog, deleteVehicle, saveBudget } from "@/lib/account.functions";
 import type { BudgetPeriod, FuelBudget, FuelLog } from "@/lib/account-input";
 import {
   logTotal,
@@ -26,7 +26,7 @@ import {
   summarizeBudget,
 } from "@/lib/budget";
 import { formatDecimal, formatEuro, formatLiters, parseDecimal } from "@/lib/format";
-import { useFuelBudget, useRefreshFuelBudget } from "@/lib/fuel-budget";
+import { skipVehicleOnboarding, useFuelBudget, useRefreshFuelBudget } from "@/lib/fuel-budget";
 import { FUEL_LABELS } from "@/types/station";
 
 const PERIOD_LABELS: Record<BudgetPeriod, string> = { weekly: "Pro Woche", monthly: "Pro Monat" };
@@ -142,6 +142,63 @@ function BudgetForm({ budget, onSaved }: { budget: FuelBudget | null; onSaved: (
   );
 }
 
+/** Löschen mit Rückfrage an Ort und Stelle (Fahrzeug, Budget). */
+function DeleteWithConfirm({
+  label,
+  question,
+  onConfirm,
+}: {
+  label: string;
+  question: string;
+  onConfirm: () => Promise<void>;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  if (!confirming) {
+    return (
+      <Button
+        variant="ghost"
+        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+        onClick={() => setConfirming(true)}
+      >
+        <Trash2 />
+        {label}
+      </Button>
+    );
+  }
+
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="flex flex-wrap items-center gap-2 rounded-md bg-destructive/10 px-3 py-2"
+    >
+      <p className="text-caption min-w-0 flex-1 text-foreground">{question}</p>
+      <div className="flex shrink-0 items-center gap-1">
+        <Button variant="ghost" size="sm" autoFocus onClick={() => setConfirming(false)}>
+          Abbrechen
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          disabled={pending}
+          onClick={() => {
+            setPending(true);
+            void onConfirm().finally(() => {
+              setPending(false);
+              setConfirming(false);
+            });
+          }}
+        >
+          {pending && <Loader2 className="animate-spin" />}
+          Löschen
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function LogRow({
   log,
   onEdit,
@@ -218,7 +275,7 @@ function LogRow({
 }
 
 export function BudgetPage() {
-  const { data, isPending, isError, refetch } = useFuelBudget();
+  const { data, isPending, isError, refetch, userId } = useFuelBudget();
   const refresh = useRefreshFuelBudget();
   const [dialog, setDialog] = useState<{ open: boolean; entry: FuelLog | null }>({
     open: false,
@@ -311,6 +368,23 @@ export function BudgetPage() {
 
           <Section id="budget-settings" title={data.budget ? "Budget" : "Budget festlegen"}>
             <BudgetForm budget={data.budget} onSaved={() => void refresh()} />
+            {data.budget && (
+              <div className="mt-2">
+                <DeleteWithConfirm
+                  label="Budget entfernen"
+                  question="Budget entfernen? Dein Tankbuch bleibt erhalten."
+                  onConfirm={async () => {
+                    try {
+                      await deleteBudget();
+                      toast.success("Budget entfernt");
+                      await refresh();
+                    } catch {
+                      toast.error("Budget konnte nicht entfernt werden. Bitte erneut versuchen.");
+                    }
+                  }}
+                />
+              </div>
+            )}
           </Section>
 
           <Section
@@ -379,6 +453,23 @@ export function BudgetPage() {
                 submitLabel="Fahrzeug speichern"
                 onSaved={() => void refresh()}
               />
+              <div className="mt-4 border-t pt-4">
+                <DeleteWithConfirm
+                  label="Fahrzeug löschen"
+                  question="Fahrzeug löschen? Budget und Tankbuch bleiben erhalten."
+                  onConfirm={async () => {
+                    try {
+                      await deleteVehicle();
+                      // Nicht sofort wieder zur Fahrzeugabfrage umleiten.
+                      if (userId) skipVehicleOnboarding(userId);
+                      toast.success("Fahrzeug gelöscht");
+                      await refresh();
+                    } catch {
+                      toast.error("Fahrzeug konnte nicht gelöscht werden. Bitte erneut versuchen.");
+                    }
+                  }}
+                />
+              </div>
             </div>
           </Section>
 

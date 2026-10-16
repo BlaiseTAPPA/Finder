@@ -91,6 +91,16 @@ export async function updateFuelLog(args: { data: FuelLogUpdateInput }): Promise
   return fetchApi<{ ok: boolean }>("/api/account/fuel-log/update", args.data);
 }
 
+/** Fahrzeug löschen; Budget und Tankbuch bleiben. */
+export async function deleteVehicle(): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/vehicle/delete", {});
+}
+
+/** Budget entfernen; das Tankbuch bleibt. */
+export async function deleteBudget(): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/budget/delete", {});
+}
+
 export async function deleteFuelLog(args: { data: { id: string } }): Promise<{ ok: true }> {
   return fetchApi<{ ok: true }>("/api/account/fuel-log/delete", args.data);
 }

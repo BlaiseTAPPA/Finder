@@ -376,6 +376,20 @@ export async function updateFuelLog(
   return (data ?? []).length > 0;
 }
 
+/** Fahrzeugprofil löschen; Budget und Tankbuch bleiben. */
+export async function deleteVehicle(clerkUserId: string) {
+  const db = await admin();
+  const { error } = await db.from("vehicle_profiles").delete().eq("clerk_user_id", clerkUserId);
+  check(error, "deleteVehicle");
+}
+
+/** Budget entfernen; das Tankbuch bleibt. */
+export async function deleteBudget(clerkUserId: string) {
+  const db = await admin();
+  const { error } = await db.from("fuel_budgets").delete().eq("clerk_user_id", clerkUserId);
+  check(error, "deleteBudget");
+}
+
 export async function deleteFuelLog(clerkUserId: string, id: string) {
   const db = await admin();
   const { error } = await db
