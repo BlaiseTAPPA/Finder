@@ -231,6 +231,9 @@ export function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geoPermission]);
 
+  /** Leert das Ortsfeld, sobald am Standort gesucht wird. */
+  const [searchResetKey, setSearchResetKey] = useState(0);
+
   // Position aus dem Browser übernehmen.
   useEffect(() => {
     if (!geo.coords) return;
@@ -241,6 +244,7 @@ export function HomePage() {
     }
     setCenter(geo.coords);
     setPlaceLabel("Aktueller Standort");
+    setSearchResetKey((key) => key + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geo.coords]);
 
@@ -566,6 +570,7 @@ export function HomePage() {
               }}
               searching={searching}
               locating={geo.status === "loading"}
+              resetKey={searchResetKey}
             />
             {geo.error && <p className="text-fine mt-2 text-muted-foreground">{geo.error}</p>}
           </div>
@@ -690,6 +695,7 @@ export function HomePage() {
                             setCenter({ lat: station.lat, lng: station.lng });
                             setPlaceLabel(station.name);
                             setActiveId(station.id);
+                            setSearchResetKey((key) => key + 1);
                           }}
                           onShowAllFavorites={() => setTab("favorites")}
                           onSelectTrip={(trip) => {
