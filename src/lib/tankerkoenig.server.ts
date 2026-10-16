@@ -226,3 +226,39 @@ export async function geocode(
   writeCache(key, value, 24 * 60 * 60 * 1000);
   return value;
 }
+
+/**
+ * Ortsname zu einer Position (Nominatim reverse, Gemeinde-Ebene) – füllt das Ortsfeld nach
+ * "Meinen Standort verwenden". Die Position wird vorher auf ~100 m gerundet.
+ */
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  const rlat = Math.round(lat * 1000) / 1000;
+  const rlng = Math.round(lng * 1000) / 1000;
+  const key = `rev:${rlat},${rlng}`;
+  const cached = readCache<string | null>(key);
+  if (cached !== null) return cached;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&accept-language=de&lat=${rlat}&lon=${rlng}`;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: { "User-Agent": "Tankstellen-Finder", Accept: "application/json" },
+      signal: controller.signal,
+    });
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) return null;
+
+  const json = (await res.json()) as {
+    address?: Partial<Record<"city" | "town" | "village" | "municipality" | "county", string>>;
+  };
+  const a = json.address ?? {};
+  const label = a.city ?? a.town ?? a.village ?? a.municipality ?? a.county ?? null;
+  if (label) writeCache(key, label, 24 * 60 * 60 * 1000);
+  return label;
+}

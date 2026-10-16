@@ -1,4 +1,5 @@
 /** Manuelle Ortssuche (Ort oder PLZ) als Fallback zur Geolokalisierung. */
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,13 +18,30 @@ interface Props {
   onLocate: () => void;
   searching: boolean;
   locating: boolean;
+  /**
+   * Text, den die Seite ins Feld schreibt (Ortsname nach Standort oder Favorit, wiederhergestellte
+   * Suche). `key` zählt hoch, damit auch derselbe Text erneut gesetzt wird.
+   */
+  fill?: { text: string; key: number };
 }
 
-export function SearchForm({ onSearch, onLocate, searching, locating }: Props) {
+export function SearchForm({
+  onSearch,
+  onLocate,
+  searching,
+  locating,
+  fill = { text: "", key: 0 },
+}: Props) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { query: "" },
+    defaultValues: { query: fill.text },
   });
+
+  // Sonst bliebe z. B. "Mannheim" stehen, obwohl jetzt am Standort gesucht wird.
+  useEffect(() => {
+    if (fill.key > 0) form.reset({ query: fill.text });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fill.key]);
 
   return (
     <form

@@ -87,7 +87,7 @@ function normalizePrices(entry) {
     }
   };
 }
-var priceSchema, toPrice, rawStationSchema, listResponseSchema, pricesEntrySchema, pricesResponseSchema, listInputSchema, pricesInputSchema, geocodeInputSchema;
+var priceSchema, toPrice, rawStationSchema, listResponseSchema, pricesEntrySchema, pricesResponseSchema, listInputSchema, pricesInputSchema, geocodeInputSchema, reverseGeocodeInputSchema;
 var init_tankerkoenig = __esm({
   "src/lib/tankerkoenig.ts"() {
     "use strict";
@@ -137,6 +137,10 @@ var init_tankerkoenig = __esm({
     geocodeInputSchema = z.object({
       query: z.string().min(2).max(120)
     });
+    reverseGeocodeInputSchema = z.object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180)
+    });
   }
 });
 
@@ -146,7 +150,8 @@ __export(tankerkoenig_server_exports, {
   TankerkoenigError: () => TankerkoenigError,
   fetchPrices: () => fetchPrices,
   fetchStations: () => fetchStations,
-  geocode: () => geocode
+  geocode: () => geocode,
+  reverseGeocode: () => reverseGeocode
 });
 function readCache(key) {
   const hit = cache.get(key);
@@ -298,6 +303,33 @@ async function geocode(query) {
   } : null;
   writeCache(key, value, 24 * 60 * 60 * 1e3);
   return value;
+}
+async function reverseGeocode(lat2, lng2) {
+  const rlat = Math.round(lat2 * 1e3) / 1e3;
+  const rlng = Math.round(lng2 * 1e3) / 1e3;
+  const key = `rev:${rlat},${rlng}`;
+  const cached = readCache(key);
+  if (cached !== null) return cached;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4e3);
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&accept-language=de&lat=${rlat}&lon=${rlng}`;
+  let res;
+  try {
+    res = await fetch(url, {
+      headers: { "User-Agent": "Tankstellen-Finder", Accept: "application/json" },
+      signal: controller.signal
+    });
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) return null;
+  const json = await res.json();
+  const a = json.address ?? {};
+  const label = a.city ?? a.town ?? a.village ?? a.municipality ?? a.county ?? null;
+  if (label) writeCache(key, label, 24 * 60 * 60 * 1e3);
+  return label;
 }
 var BASE, cache, TankerkoenigError;
 var init_tankerkoenig_server = __esm({
@@ -1704,6 +1736,16 @@ app.post("/api/stations/geocode", async (req, res) => {
     }
     console.error("[geocodePlace] Erreur :", error);
     res.json({ ok: false, error: { kind: "upstream", message: "Ortssuche fehlgeschlagen." } });
+  }
+});
+app.post("/api/stations/reverse-geocode", async (req, res) => {
+  try {
+    const { lat: lat2, lng: lng2 } = reverseGeocodeInputSchema.parse(req.body);
+    const label = await reverseGeocode(lat2, lng2);
+    res.json(label ? { ok: true, label } : { ok: false });
+  } catch (error) {
+    console.error("[reverseGeocode] Erreur :", error);
+    res.json({ ok: false });
   }
 });
 app.post("/api/routes/plan", async (req, res) => {

@@ -4,6 +4,7 @@ import { parseSearchSession, serializeSearchSession, type SearchSession } from "
 const session: SearchSession = {
   center: { lat: 49.2231, lng: 8.3645 },
   placeLabel: "Germersheim",
+  queryText: "Germersheim",
   radius: 10,
   fuel: "e10",
   sort: "distance",
@@ -26,6 +27,11 @@ const session: SearchSession = {
 describe("search session", () => {
   it("übersteht Speichern und Laden unverändert", () => {
     expect(parseSearchSession(serializeSearchSession(session))).toEqual(session);
+  });
+
+  it("liest ältere Einträge ohne Text im Ortsfeld", () => {
+    const { queryText: _text, ...older } = session;
+    expect(parseSearchSession(serializeSearchSession(older))).toEqual(older);
   });
 
   it("akzeptiert den Ausgangszustand ohne Suche", () => {
