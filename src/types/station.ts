@@ -68,13 +68,13 @@ export interface RouteStation {
   score: number;
 }
 
-/** Sortiermodi der Trajet-Ansicht. */
+/** Sortiermodi der Streckenansicht. */
 export type RouteSortMode = "best" | "price" | "detour";
 
 /**
- * Ein gespeicherter Trajet (localStorage).
+ * Eine gespeicherte Strecke (localStorage).
  * Bewusst ein type-Alias statt interface: nur so ist er dem .passthrough()-Schema
- * (Index-Signatur) zuweisbar, das Trajets an den Server schickt.
+ * (Index-Signatur) zuweisbar, das Strecken an den Server schickt.
  */
 export type SavedTrip = {
   id: string;

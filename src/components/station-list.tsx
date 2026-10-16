@@ -19,7 +19,7 @@ interface Props {
   highlightCheapest?: boolean;
   trends?: Map<string, TrendSummary> | undefined;
   onOpenTrend?: ((station: Station) => void) | undefined;
-  /** Umweg-Daten der Trajet-Ansicht (Station-ID -> Umweg). */
+  /** Umweg-Daten der Streckenansicht (Station-ID -> Umweg). */
   detours?: Map<string, CardDetour> | undefined;
   /** Community-Ebene (Badge + Aktionen), ergänzt den Tankerkönig-Preis. */
   community?: Omit<CardCommunity, "status"> | undefined;

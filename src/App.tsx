@@ -12,6 +12,8 @@ import { VehicleOnboardingPage } from "@/pages/VehicleOnboardingPage";
 import { SignInPage } from "@/pages/SignInPage";
 import { SignUpPage } from "@/pages/SignUpPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { ImpressumPage } from "@/pages/ImpressumPage";
+import { DatenschutzPage } from "@/pages/DatenschutzPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +48,8 @@ export function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/sign-in" element={<SignInPage />} />
               <Route path="/sign-up" element={<SignUpPage />} />
+              <Route path="/impressum" element={<ImpressumPage />} />
+              <Route path="/datenschutz" element={<DatenschutzPage />} />
               <Route element={<ProtectedLayout />}>
                 <Route path="/alerts" element={<AlertsPage />} />
                 <Route path="/budget" element={<BudgetPage />} />

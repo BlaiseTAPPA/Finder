@@ -1,5 +1,5 @@
 /**
- * Gespeicherte Trajets: lokal in localStorage, bei angemeldetem Konto zusätzlich in der Datenbank.
+ * Gespeicherte Strecken: lokal in localStorage, bei angemeldetem Konto zusätzlich in der Datenbank.
  * Die UI wird sofort aktualisiert; der Konto-Sync läuft im Hintergrund.
  */
 import { useCallback, useEffect, useState } from "react";
@@ -8,7 +8,7 @@ import { deleteTripForUser, saveTripForUser } from "./account.functions";
 
 const KEY = "tankstellen:trips";
 
-/** Speicher-Cache, damit Trajets auch bei blockiertem localStorage für die Sitzung bleiben. */
+/** Speicher-Cache, damit Strecken auch bei blockiertem localStorage für die Sitzung bleiben. */
 let cache: SavedTrip[] | null = null;
 const listeners = new Set<() => void>();
 /** Konto, mit dem Änderungen synchronisiert werden (gesetzt vom Konto-Sync in favorites.ts). */
@@ -31,17 +31,17 @@ function write(next: SavedTrip[]) {
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
-    /* Speicher blockiert – Trajets bleiben nur für die Sitzung */
+    /* Speicher blockiert – Strecken bleiben nur für die Sitzung */
   }
   listeners.forEach((notify) => notify());
 }
 
-/** Lokal gespeicherte Trajets (für die Konto-Migration). */
+/** Lokal gespeicherte Strecken (für die Konto-Migration). */
 export function readLocalTrips(): SavedTrip[] {
   return read();
 }
 
-/** Lokale Trajets ersetzen (Kontostand übernehmen bzw. beim Abmelden leeren). */
+/** Lokale Strecken ersetzen (Kontostand übernehmen bzw. beim Abmelden leeren). */
 export function replaceLocalTrips(next: SavedTrip[]) {
   write(next);
 }

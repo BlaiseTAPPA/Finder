@@ -28,8 +28,10 @@ If the scope changes during implementation, update the prompt in the same PR, so
 
 ## Index
 
-| #                                   | Feature                                               | Status | PR                                                   |
-| ----------------------------------- | ----------------------------------------------------- | ------ | ---------------------------------------------------- |
-| [0001](0001-design-system-audit.md) | Design system audit and redesign                      | Done   | [#4](https://github.com/BlaiseTAPPA/Finder/pull/4)   |
-| [0002](0002-fuel-budget.md)         | Fuel budget, phase 1: vehicle, budget and fill-up log | Done   | [#10](https://github.com/BlaiseTAPPA/Finder/pull/10) |
-| [0003](0003-budget-advice.md)       | Fuel budget, phase 2: budget-aware recommendations    | Done   | [#12](https://github.com/BlaiseTAPPA/Finder/pull/12) |
+| #                                   | Feature                                                 | Status      | PR                                                   |
+| ----------------------------------- | ------------------------------------------------------- | ----------- | ---------------------------------------------------- |
+| [0001](0001-design-system-audit.md) | Design system audit and redesign                        | Done        | [#4](https://github.com/BlaiseTAPPA/Finder/pull/4)   |
+| [0002](0002-fuel-budget.md)         | Fuel budget, phase 1: vehicle, budget and fill-up log   | Done        | [#10](https://github.com/BlaiseTAPPA/Finder/pull/10) |
+| [0003](0003-budget-advice.md)       | Fuel budget, phase 2: budget-aware recommendations      | Done        | [#12](https://github.com/BlaiseTAPPA/Finder/pull/12) |
+| [0005](0005-legal-pages.md)         | Impressum, privacy policy and German wording            | In progress | —                                                    |
+| [0006](0006-instant-home.md)        | Open and know: instant prices on launch, install prompt | In progress | —                                                    |

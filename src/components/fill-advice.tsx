@@ -13,7 +13,7 @@ import type { BestChoice, BudgetRange, FillPlan, StationAdvice } from "@/lib/bud
 import type { TrendSummary } from "@/lib/trend.functions";
 import type { Station } from "@/types/station";
 
-/** "Anfahrt" in der Umkreissuche, "Umweg" auf dem Trajet. */
+/** "Anfahrt" in der Umkreissuche, "Umweg" auf der Strecke. */
 export type AccessLabel = "Anfahrt" | "Umweg";
 
 function planText(plan: FillPlan, accessLabel: AccessLabel): string {

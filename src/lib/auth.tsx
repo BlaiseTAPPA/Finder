@@ -63,7 +63,7 @@ function ClerkBridge({ children }: { children: ReactNode }) {
   const clerkAuth = useClerkAuth();
   const clerkUser = useClerkUser();
 
-  // Favoriten und Trajets bei An-/Abmeldung mit dem Konto abgleichen.
+  // Favoriten und Strecken bei An-/Abmeldung mit dem Konto abgleichen.
   useAccountSync({
     isLoaded: clerkAuth.isLoaded && clerkUser.isLoaded,
     userId: clerkAuth.isSignedIn ? (clerkAuth.userId ?? null) : null,

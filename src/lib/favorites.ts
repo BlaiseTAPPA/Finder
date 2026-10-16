@@ -1,6 +1,6 @@
 /**
  * Favoriten: lokal in localStorage, bei angemeldetem Konto zusätzlich in der Datenbank.
- * Bei jeder Anmeldung werden Gast-Favoriten und -Trajets mit dem Konto vereinigt (Union),
+ * Bei jeder Anmeldung werden Gast-Favoriten und -Strecken mit dem Konto vereinigt (Union),
  * danach wird der Kontostand geladen. Beim Abmelden wird die lokale Kopie geleert.
  */
 import { useCallback, useEffect, useState } from "react";

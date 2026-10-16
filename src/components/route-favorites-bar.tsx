@@ -1,4 +1,4 @@
-/** Gespeicherte Trajets: mit einem Klick erneut suchen. */
+/** Gespeicherte Strecken: mit einem Klick erneut suchen. */
 import { Route as RouteIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SavedTrip } from "@/types/station";
@@ -14,7 +14,7 @@ export function RouteFavoritesBar({ trips, onSelect, onRemove }: Props) {
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2 overflow-x-auto">
-      <span className="text-fine text-muted-foreground">Gespeicherte Trajets:</span>
+      <span className="text-fine text-muted-foreground">Gespeicherte Strecken:</span>
       {trips.map((trip) => (
         <span
           key={trip.id}

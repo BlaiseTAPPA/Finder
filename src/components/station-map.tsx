@@ -132,7 +132,7 @@ interface Props {
   onHover?: ((id: string | null) => void) | undefined;
   onSelect?: ((id: string) => void) | undefined;
   onShowRoute?: ((station: Station) => void) | undefined;
-  /** Trajet-Modus: Geometrie der Route. */
+  /** Streckenmodus: Geometrie der Route. */
   routeLine?: Coords[] | undefined;
   /** Korridorbreite in km (halbtransparentes Band um die Route). */
   corridorKm?: number | undefined;
@@ -164,7 +164,7 @@ export default function StationMap({
   const coarsePointer =
     typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 
-  // Trajet liefert den Rang mit; in der Umkreissuche wird er hier für die Pinfarbe ermittelt.
+  // Die Streckensuche liefert den Rang mit; in der Umkreissuche wird er hier für die Pinfarbe ermittelt.
   const ranks = useMemo(
     () => priceRank ?? rankByPrice(stations, fuel),
     [priceRank, stations, fuel],

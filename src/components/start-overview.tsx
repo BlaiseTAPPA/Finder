@@ -1,6 +1,6 @@
 /**
  * Startübersicht ohne aktive Suche: Favoriten mit aktuellen Preisen (günstigste zuerst)
- * und gespeicherte Trajets als Schnellzugriff. Rein darstellend – Daten kommen von HomePage.
+ * und gespeicherte Strecken als Schnellzugriff. Rein darstellend – Daten kommen von HomePage.
  */
 import { ChevronRight, Route as RouteIcon } from "lucide-react";
 import { PriceFigure } from "@/components/price-figure";
@@ -122,7 +122,7 @@ export function StartOverview({
       {trips.length > 0 && (
         <section aria-labelledby="start-trips">
           <h2 id="start-trips" className="text-body mb-2 font-semibold text-foreground">
-            Deine Trajets
+            Deine Strecken
           </h2>
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
             {trips.map((trip) => (

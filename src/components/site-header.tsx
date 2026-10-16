@@ -19,7 +19,7 @@ interface Props {
 
 const ITEMS: { value: MainTab; label: string; icon: typeof Target }[] = [
   { value: "search", label: "Umkreis", icon: Target },
-  { value: "trip", label: "Trajet", icon: RouteIcon },
+  { value: "trip", label: "Strecke", icon: RouteIcon },
   { value: "favorites", label: "Favoriten", icon: Star },
 ];
 

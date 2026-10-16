@@ -1,6 +1,6 @@
 /**
  * Suchzustand der Startseite für die laufende Browser-Sitzung (sessionStorage).
- * Hält Ort, Umkreis, Sorte, Sortierung, Tab und Trajet über Seitenwechsel
+ * Hält Ort, Umkreis, Sorte, Sortierung, Tab und Strecke über Seitenwechsel
  * (z. B. Preisalarme → zurück) und Neuladen hinweg – nur in diesem Tab,
  * nie in der URL, damit der Standort nicht in geteilten Links landet.
  */
@@ -31,7 +31,7 @@ const schema = z.object({
     destinationText: label,
     corridorKm,
     routeSort: z.enum(["best", "price", "detour"]),
-    /** Zuletzt ausgeführte Trajet-Suche (null = noch keine). */
+    /** Zuletzt ausgeführte Streckensuche (null = noch keine). */
     query: z.object({ origin: coords, destination: coords, corridorKm }).nullable(),
   }),
 });

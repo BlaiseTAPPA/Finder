@@ -98,7 +98,7 @@ export async function addTrip(clerkUserId: string, trip: SavedTrip) {
   await addTrips(clerkUserId, [trip]);
 }
 
-/** Mehrere Trajets in einem Upsert; gleicher Name ersetzt den vorhandenen Eintrag. */
+/** Mehrere Strecken in einem Upsert; gleicher Name ersetzt den vorhandenen Eintrag. */
 export async function addTrips(clerkUserId: string, trips: SavedTrip[]) {
   const unique = [...new Map(trips.map((t) => [t.name, t])).values()];
   if (unique.length === 0) return;

@@ -1,4 +1,4 @@
-/** Server-only Adress-Suche (Nominatim) für das Autocomplete der Trajet-Felder. */
+/** Server-only Adress-Suche (Nominatim) für das Autocomplete der Streckenfelder. */
 const cache = new Map<string, { value: Suggestion[]; expires: number }>();
 
 export interface Suggestion {
