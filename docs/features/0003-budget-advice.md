@@ -1,10 +1,10 @@
 # 0003 · Fuel budget, phase 2: budget-aware recommendations
 
-|            |                           |
-| ---------- | ------------------------- |
-| **Status** | In progress               |
-| **Branch** | `feat/0003-budget-advice` |
-| **PR**     | —                         |
+|            |                                                      |
+| ---------- | ---------------------------------------------------- |
+| **Status** | Done                                                 |
+| **Branch** | `feat/0003-budget-advice`                            |
+| **PR**     | [#12](https://github.com/BlaiseTAPPA/Finder/pull/12) |
 
 ### 1. Goal
 
