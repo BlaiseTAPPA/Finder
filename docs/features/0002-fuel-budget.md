@@ -20,12 +20,13 @@ A budget alone can't tell anyone how to stay within it. What drives spending is 
 - **Fields:** fuel type (E5 / E10 / Diesel), average consumption (L/100 km), tank capacity (L), and an optional name ("Golf").
 - **Defaults:** values are pre-filled (E10, 7.0 L/100 km, 50 L), so the user can confirm with one tap.
 - **"Später":** the user can skip for now. `/budget` can't be used without a profile and asks for it again there.
-- The profile can be edited later from `/budget`.
+- The profile can be edited or deleted later from `/budget` (deletion added after the first release; the budget and the log are kept).
 - Once a profile exists, its fuel type pre-selects the fuel filter on the home page, unless a restored search session already has one (see `src/lib/search-session.ts`).
 
 **Budget**
 
 - One active budget per user: an amount in € and a period, **weekly** (Monday to Sunday) or **monthly** (calendar month). Periods are computed in Europe/Berlin time.
+- The budget can be removed from `/budget`; the log is kept (added after the first release).
 - Changing the amount or the period applies to the current period immediately. The log entries stay.
 
 **Fill-up log ("Tankbuch")**

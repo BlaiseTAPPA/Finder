@@ -1595,6 +1595,16 @@ async function updateFuelLog(clerkUserId, id, input) {
   check(error, "updateFuelLog");
   return (data ?? []).length > 0;
 }
+async function deleteVehicle(clerkUserId) {
+  const db = await admin3();
+  const { error } = await db.from("vehicle_profiles").delete().eq("clerk_user_id", clerkUserId);
+  check(error, "deleteVehicle");
+}
+async function deleteBudget(clerkUserId) {
+  const db = await admin3();
+  const { error } = await db.from("fuel_budgets").delete().eq("clerk_user_id", clerkUserId);
+  check(error, "deleteBudget");
+}
 async function deleteFuelLog(clerkUserId, id) {
   const db = await admin3();
   const { error } = await db.from("fuel_logs").delete().eq("clerk_user_id", clerkUserId).eq("id", id);
@@ -2098,6 +2108,20 @@ app.post(
     "Budget konnte nicht gespeichert werden",
     (userId, body) => upsertBudget(userId, budgetSchema.parse(body))
   )
+);
+app.post(
+  "/api/account/vehicle/delete",
+  accountRoute("vehicle/delete", "Fahrzeug konnte nicht gel\xF6scht werden", async (userId) => {
+    await deleteVehicle(userId);
+    return { ok: true };
+  })
+);
+app.post(
+  "/api/account/budget/delete",
+  accountRoute("budget/delete", "Budget konnte nicht entfernt werden", async (userId) => {
+    await deleteBudget(userId);
+    return { ok: true };
+  })
 );
 app.post(
   "/api/account/fuel-log",

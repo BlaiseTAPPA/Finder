@@ -91,6 +91,8 @@ import {
   addFuelLog,
   updateFuelLog,
   deleteFuelLog,
+  deleteVehicle,
+  deleteBudget,
 } from "./src/lib/account.server";
 
 const app = express();
@@ -665,6 +667,22 @@ app.post(
   accountRoute("budget", "Budget konnte nicht gespeichert werden", (userId, body) =>
     upsertBudget(userId, budgetSchema.parse(body)),
   ),
+);
+
+app.post(
+  "/api/account/vehicle/delete",
+  accountRoute("vehicle/delete", "Fahrzeug konnte nicht gelöscht werden", async (userId) => {
+    await deleteVehicle(userId);
+    return { ok: true };
+  }),
+);
+
+app.post(
+  "/api/account/budget/delete",
+  accountRoute("budget/delete", "Budget konnte nicht entfernt werden", async (userId) => {
+    await deleteBudget(userId);
+    return { ok: true };
+  }),
 );
 
 app.post(
