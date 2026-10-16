@@ -61,8 +61,8 @@ export function DatenschutzPage() {
         <List>
           <li>
             <strong className="text-foreground">Standort:</strong> Nur wenn du auf „Standort“ bzw.
-            „Standort verwenden“ tippst, fragt dein Browser nach deiner Erlaubnis. Hast du sie
-            erteilt, ermittelt die App deinen Standort beim Öffnen automatisch, um die Preise in
+            „Meinen Standort verwenden“ tippst, fragt dein Browser nach deiner Erlaubnis. Hast du
+            sie erteilt, ermittelt die App deinen Standort beim Öffnen automatisch, um die Preise in
             deiner Nähe zu zeigen; die Freigabe kannst du jederzeit in den Browser-Einstellungen
             widerrufen. Die Koordinaten nutzen wir ausschließlich für die Suche und speichern sie
             nicht in einem Konto.

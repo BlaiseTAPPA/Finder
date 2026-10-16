@@ -20,7 +20,7 @@ Fuel apps are opened at a red light or in the car park, with a single question: 
 
 **Start screen when the location isn't granted yet**
 
-- The start notice gets a primary **"Standort verwenden"** button and says why: once allowed, the app opens directly on the prices nearby. The prompt only appears after that tap.
+- The start notice says why to use the location: once allowed, the app opens directly on the prices nearby. The location button stays in the search form only (no duplicate), and the prompt only appears after that tap.
 - If the permission was denied, the notice explains how to search by place instead (no button that can't work).
 
 **Compact header once there are results**
@@ -55,7 +55,7 @@ Fuel apps are opened at a red light or in the car park, with a single question: 
 ### 4. Acceptance check
 
 - [ ] With the location permission granted, opening the app in a new tab shows the nearby results without any tap.
-- [ ] With the permission not yet granted, no prompt appears on load; "Standort verwenden" triggers it and then shows results.
+- [ ] With the permission not yet granted, no prompt appears on load; the location button in the search form triggers it and then shows results.
 - [ ] With the permission denied, the start screen explains how to search by place.
 - [ ] A restored session (back from `/budget`) keeps its search instead of re-locating.
 - [ ] Once results are shown, the headline is hidden visually but still present for screen readers.
