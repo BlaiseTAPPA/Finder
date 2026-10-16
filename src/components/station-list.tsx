@@ -1,8 +1,6 @@
 /** Sortierte Ergebnisliste mit Hervorhebung der günstigsten Station. */
 import { useMemo } from "react";
 import { StationCard, type CardCommunity, type CardDetour } from "@/components/station-card";
-import type { AccessLabel } from "@/components/fill-advice";
-import type { StationAdvice } from "@/lib/budget-advice";
 import { cheapestStationId } from "@/lib/format";
 import type { TrendSummary } from "@/lib/trend.functions";
 import type { CommunityStatus } from "@/lib/community";
@@ -31,10 +29,8 @@ interface Props {
   layout?: "stack" | "grid" | undefined;
   /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer. */
   onFillUp?: ((station: Station) => void) | undefined;
-  /** Budgetbewusste Empfehlungen (Feature 0003); nur mit Fahrzeugprofil. */
-  advice?:
-    | { byStation: Map<string, StationAdvice>; bestId: string | null; accessLabel: AccessLabel }
-    | undefined;
+  /** Beste Wahl für das Budget (Feature 0003). */
+  bestId?: string | null | undefined;
 }
 
 export function StationList({
@@ -56,7 +52,7 @@ export function StationList({
   distanceLabel,
   layout = "stack",
   onFillUp,
-  advice,
+  bestId,
 }: Props) {
   const sorted = useMemo(() => {
     const list = [...stations];
@@ -123,15 +119,9 @@ export function StationList({
           }
           distanceLabel={distanceLabel}
           onFillUp={onFillUp}
-          advice={cardAdvice(advice, station.id)}
+          best={station.id === bestId}
         />
       ))}
     </div>
   );
-}
-
-function cardAdvice(advice: Props["advice"], id: string) {
-  const value = advice?.byStation.get(id);
-  if (!advice || !value) return undefined;
-  return { value, accessLabel: advice.accessLabel, best: advice.bestId === id };
 }

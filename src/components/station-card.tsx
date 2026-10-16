@@ -16,8 +16,6 @@ import { TrendHint } from "@/components/trend-badge";
 import { DetourBadge } from "@/components/detour-badge";
 import { CommunityTrustBadge } from "@/components/community-trust-badge";
 import { ConfirmPriceButton } from "@/components/confirm-price-button";
-import { FillAdviceLine, type AccessLabel } from "@/components/fill-advice";
-import type { StationAdvice } from "@/lib/budget-advice";
 import type { TrendSummary } from "@/lib/trend.functions";
 import type { CommunityStatus } from "@/lib/community";
 import {
@@ -34,13 +32,6 @@ export interface CardDetour {
   detourKm: number;
   detourMin: number;
   score: number;
-}
-
-/** Budgetbewusste Empfehlung (Feature 0003); nur mit Fahrzeugprofil gesetzt. */
-export interface CardAdvice {
-  value: StationAdvice;
-  accessLabel: AccessLabel;
-  best: boolean;
 }
 
 /** Community-Ebene: rein ergänzend zum offiziellen Tankerkönig-Preis. */
@@ -70,7 +61,8 @@ interface Props {
   distanceLabel?: string | undefined;
   /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer gesetzt. */
   onFillUp?: ((station: Station) => void) | undefined;
-  advice?: CardAdvice | undefined;
+  /** Beste Wahl für das Budget (Feature 0003); Details stehen in der Karte über der Liste. */
+  best?: boolean | undefined;
 }
 
 export function StationCard({
@@ -89,7 +81,7 @@ export function StationCard({
   community,
   distanceLabel,
   onFillUp,
-  advice,
+  best = false,
 }: Props) {
   const price = station.prices[fuel];
   const others = FUEL_TYPES.filter((type) => type !== fuel);
@@ -112,6 +104,7 @@ export function StationCard({
         <div className="min-w-0">
           <p className="text-fine font-medium text-ink-2">
             {cheapest ? <span className="font-semibold text-price-low">Günstigster · </span> : null}
+            {best ? <span className="font-semibold text-price-low">Beste Wahl · </span> : null}
             {FUEL_LABELS[fuel]}
           </p>
           <p
@@ -172,18 +165,16 @@ export function StationCard({
       {/* Signale: nur Ausnahmen und Kontext */}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 empty:hidden">
         {!station.isOpen && <Badge variant="negative">Geschlossen</Badge>}
-        {advice?.best && <Badge variant="positive">Beste Wahl</Badge>}
         <CommunityTrustBadge status={community?.status} />
-        {detour && (
-          <DetourBadge
-            detourKm={detour.detourKm}
-            detourMin={detour.detourMin}
-            savings={Number.isFinite(detour.score) ? detour.score : undefined}
-          />
-        )}
       </div>
 
-      {advice && <FillAdviceLine advice={advice.value} accessLabel={advice.accessLabel} />}
+      {detour && (
+        <DetourBadge
+          detourKm={detour.detourKm}
+          detourMin={detour.detourMin}
+          savings={Number.isFinite(detour.score) ? detour.score : undefined}
+        />
+      )}
 
       <TrendHint trend={trend} />
 

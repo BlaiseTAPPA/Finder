@@ -26,11 +26,7 @@ Phase 1 ([0002](0002-fuel-budget.md)) tells signed-in users what they've spent a
 
 **Personalised "Bester Kompromiss" on trips:** `detourScore` in `route-score.ts` accepts the vehicle's tank capacity and consumption instead of the fixed 50 L / 7 L/100 km. Without a vehicle, the server's score stays as is.
 
-**Station card** (signed-in, vehicle saved, selected fuel = vehicle fuel):
-
-- one line under the signals: "Volltanken (50 L) ≈ 87,45 €", with "+ 0,90 € Anfahrt" when the access cost is at least 0,05 €;
-- with a budget: "Restbudget reicht für 42,5 L" when the budget doesn't cover the full tank, or "Budget aufgebraucht";
-- a "Beste Wahl" badge on the best-choice station.
+**Station card** (signed-in, vehicle saved, selected fuel = vehicle fuel): only "Beste Wahl" in the label above the price, like "Günstigster". The cards were already dense, so the costs and the budget stay in the best-choice card. On trips, the detour becomes a plain text line ("Umweg +3 Min · +1,1 km · spart ca. 3,67 €") instead of a pill and a separate saving.
 
 **"Beste Wahl für dein Budget" card** above the results, in the nearby and trip views:
 
@@ -54,8 +50,8 @@ Phase 1 ([0002](0002-fuel-budget.md)) tells signed-in users what they've spent a
 
 ### 4. Acceptance check
 
-- [ ] With a vehicle (50 L, 7 L/100 km) and E10 selected, a station at 1,749 € shows "Volltanken (50 L) ≈ 87,45 €"; in nearby search, a station 3 km away adds the access cost of a 6 km round trip.
-- [ ] With 40 € left, a 1,749 € station without access cost (favorites) shows "Restbudget reicht für 22,8 L"; 3 km away in nearby search, 22,4 L; with nothing left it shows "Budget aufgebraucht".
+- [ ] With a vehicle (50 L, 7 L/100 km) and E10 selected, the best-choice card for a station at 1,749 € shows "Volltanken (50 L) ≈ 87,45 €"; in nearby search, a station 3 km away adds the access cost of a 6 km round trip.
+- [ ] With 40 € left, the best-choice card at a 1,749 € station 3 km away shows "Restbudget reicht für 22,4 L" (22,8 L without access cost); with nothing left it shows "Budget aufgebraucht".
 - [ ] The best-choice card names the station with the lowest effective cost, which can be a slightly dearer but closer station; it doesn't appear with fewer than 2 candidates.
 - [ ] "Anzeigen" scrolls to and highlights the station.
 - [ ] On a trip, "Bester Kompromiss" uses the vehicle's tank and consumption.
@@ -63,6 +59,7 @@ Phase 1 ([0002](0002-fuel-budget.md)) tells signed-in users what they've spent a
 - [ ] A guest, or a user without a vehicle, sees no change.
 - [ ] `/budget` shows the range of the remaining budget at the last price paid.
 - [ ] Unit tests cover the fill and access cost, affordable litres, the best choice (closer vs cheaper, closed stations, missing prices, fewer than 2 candidates) and the personalised score.
+- [ ] The station card gains no extra row: only "Beste Wahl" in its label.
 - [ ] At 360px, everything fits; light and dark mode; keyboard-reachable.
 - [ ] `npm run typecheck`, `npm run lint` and `npm test` pass.
 

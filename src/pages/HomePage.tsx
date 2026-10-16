@@ -451,7 +451,7 @@ export function HomePage() {
       detourKmOf: (station) => estimateDetour(station.dist).detourKm,
     });
     const best = bestChoice(stations, byStation);
-    return { byStation, best, bestId: best?.station.id ?? null, accessLabel: "Anfahrt" as const };
+    return { best, bestId: best?.station.id ?? null };
   }, [adviceVehicle, stations, fuel, remainingBudget]);
 
   // Bester Kompromiss mit Tankgröße und Verbrauch des Fahrzeugs statt der Annahmen des Servers.
@@ -483,20 +483,8 @@ export function HomePage() {
       detourKmOf: (station) => detours.get(station.id)?.detourKm ?? null,
     });
     const best = bestChoice(routeStationList, byStation);
-    return { byStation, best, bestId: best?.station.id ?? null, accessLabel: "Umweg" as const };
+    return { best, bestId: best?.station.id ?? null };
   }, [adviceVehicle, routeStationList, detours, fuel, remainingBudget]);
-
-  const favoriteAdvice = useMemo(() => {
-    if (!adviceVehicle) return undefined;
-    const byStation = adviseStations({
-      stations: favorites.favorites,
-      fuel,
-      vehicle: adviceVehicle,
-      remaining: remainingBudget,
-      detourKmOf: () => null,
-    });
-    return { byStation, bestId: null, accessLabel: "Anfahrt" as const };
-  }, [adviceVehicle, favorites.favorites, fuel, remainingBudget]);
 
   const showStation = useCallback((station: Station) => {
     setActiveId(station.id);
@@ -696,7 +684,7 @@ export function HomePage() {
                       community={communityProps}
                       communityStatuses={communityStatuses}
                       onFillUp={onFillUp}
-                      advice={nearbyAdvice}
+                      bestId={nearbyAdvice?.bestId}
                     />
                   )}
                 </>
@@ -869,7 +857,7 @@ export function HomePage() {
                       community={communityProps}
                       communityStatuses={communityStatuses}
                       onFillUp={onFillUp}
-                      advice={routeAdvice}
+                      bestId={routeAdvice?.bestId}
                       detours={routeDetours}
                       distanceLabel="Abstand zur Route:"
                     />
@@ -936,7 +924,6 @@ export function HomePage() {
                 community={communityProps}
                 communityStatuses={communityStatuses}
                 onFillUp={onFillUp}
-                advice={favoriteAdvice}
                 highlightCheapest={false}
                 layout="grid"
               />

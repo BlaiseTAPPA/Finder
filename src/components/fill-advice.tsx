@@ -1,6 +1,6 @@
 /**
- * Budgetbewusste Hinweise (Feature 0003): Kosten einer Tankfüllung auf der Stationskarte,
- * die "Beste Wahl" über den Ergebnissen und die Reichweite des Restbudgets auf /budget.
+ * Budgetbewusste Hinweise (Feature 0003): die "Beste Wahl" über den Ergebnissen und die
+ * Reichweite des Restbudgets auf /budget.
  * Alles Schätzungen – die Texte sagen das.
  */
 import { CircleCheck, Fuel, TrendingDown, TrendingUp, Wallet } from "lucide-react";
@@ -36,22 +36,6 @@ function BudgetLine({ advice }: { advice: StationAdvice }) {
     );
   }
   return null;
-}
-
-/** Eine Zeile auf der Stationskarte; bricht auf schmalen Karten um. */
-export function FillAdviceLine({
-  advice,
-  accessLabel,
-}: {
-  advice: StationAdvice;
-  accessLabel: AccessLabel;
-}) {
-  return (
-    <p className="text-fine num mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-ink-2">
-      <span>{planText(advice.plan, accessLabel)}</span>
-      <BudgetLine advice={advice} />
-    </p>
-  );
 }
 
 /** Zeitpunkt-Hinweis aus dem 7-Tage-Trend der Station, falls belastbar. */
