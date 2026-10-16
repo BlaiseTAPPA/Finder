@@ -1,15 +1,5 @@
 /** Lade-, Leer- und Fehlerzustände. */
-import {
-  AlertTriangle,
-  KeyRound,
-  Loader2,
-  LocateFixed,
-  MapPin,
-  MapPinOff,
-  SearchX,
-  Timer,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle, KeyRound, MapPin, MapPinOff, SearchX, Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { GeoPermission } from "@/lib/geolocation";
@@ -74,40 +64,20 @@ export function EmptyState({ radius }: { radius: number }) {
 }
 
 /**
- * Startzustand ohne Suche. Mit noch nicht erteilter Freigabe erklärt er den Vorteil und bietet
- * "Standort verwenden" an – die Browser-Abfrage kommt erst nach diesem Tippen (Feature 0006).
+ * Startzustand ohne Suche (Feature 0006). Erklärt den Vorteil der Standortfreigabe; der
+ * Standort-Button steht oben in der Suche, hier nicht noch einmal.
  */
-export function StartState({
-  permission = "unknown",
-  locating = false,
-  onLocate,
-}: {
-  permission?: GeoPermission;
-  locating?: boolean;
-  onLocate?: (() => void) | undefined;
-}) {
-  if (permission === "denied") {
-    return (
-      <Notice
-        icon={<MapPinOff />}
-        title="Wo möchtest du tanken?"
-        description="Die Standortfreigabe ist in deinem Browser blockiert. Suche oben nach Ort oder Postleitzahl – oder erlaube den Standort in den Browser-Einstellungen."
-      />
-    );
-  }
+export function StartState({ permission = "unknown" }: { permission?: GeoPermission }) {
   return (
     <Notice
-      icon={<MapPin />}
+      icon={permission === "denied" ? <MapPinOff /> : <MapPin />}
       title="Wo möchtest du tanken?"
-      description="Mit deinem Standort öffnet die App künftig direkt mit den Preisen in deiner Nähe. Oder suche oben nach Ort oder Postleitzahl."
-    >
-      {onLocate && (
-        <Button onClick={onLocate} disabled={locating}>
-          {locating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
-          Standort verwenden
-        </Button>
-      )}
-    </Notice>
+      description={
+        permission === "denied"
+          ? "Die Standortfreigabe ist in deinem Browser blockiert. Suche oben nach Ort oder Postleitzahl – oder erlaube den Standort in den Browser-Einstellungen."
+          : "Nutze oben deinen Standort – dann öffnet die App künftig direkt mit den Preisen in deiner Nähe. Oder suche nach Ort oder Postleitzahl."
+      }
+    />
   );
 }
 

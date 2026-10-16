@@ -231,13 +231,6 @@ export function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geoPermission]);
 
-  const locateHere = useCallback(() => {
-    setGeoError(null);
-    setLocateTarget("search");
-    geo.request();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.request]);
-
   // Position aus dem Browser übernehmen.
   useEffect(() => {
     if (!geo.coords) return;
@@ -676,11 +669,7 @@ export function HomePage() {
                 <>
                   {!center && !error && (
                     <>
-                      <StartState
-                        permission={geoPermission}
-                        locating={geo.status === "loading" && locateTarget === "search"}
-                        onLocate={locateHere}
-                      />
+                      <StartState permission={geoPermission} />
                       {budgetSummary && fuelBudget.data?.budget && (
                         <div className="mt-6">
                           <BudgetStatus
