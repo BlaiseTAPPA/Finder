@@ -875,6 +875,7 @@ export function HomePage() {
       <PriceTrendChart
         station={trendStation}
         fuel={fuel}
+        trend={trendStation ? trends.get(trendStation.id) : undefined}
         onOpenChange={(open) => {
           if (!open) setTrendStation(null);
         }}

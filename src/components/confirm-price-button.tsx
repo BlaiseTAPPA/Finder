@@ -72,7 +72,7 @@ export function ConfirmPriceButton({ station, fuel, contributorId, userCoords, o
               }}
             >
               {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-              <span className="@max-sm:sr-only">Stimmt</span>
+              <span className="@max-lg:sr-only">Stimmt</span>
             </Button>
           </span>
         </TooltipTrigger>
