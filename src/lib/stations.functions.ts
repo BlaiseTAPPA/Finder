@@ -27,6 +27,16 @@ export async function refreshPrices(args: { data: PricesInput }): Promise<Prices
 }
 
 /** Ort oder PLZ in Koordinaten auflösen (Nominatim). */
+/** Ortsname zur Position (für das Ortsfeld); { ok: false } ohne Treffer. */
+export async function reverseGeocodePlace(args: {
+  data: { lat: number; lng: number };
+}): Promise<{ ok: true; label: string } | { ok: false }> {
+  return fetchApi<{ ok: true; label: string } | { ok: false }>(
+    "/api/stations/reverse-geocode",
+    args.data,
+  );
+}
+
 export async function geocodePlace(args: { data: GeocodeInput }): Promise<GeocodeResult> {
   return fetchApi<GeocodeResult>("/api/stations/geocode", args.data);
 }

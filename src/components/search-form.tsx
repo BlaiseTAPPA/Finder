@@ -18,20 +18,30 @@ interface Props {
   onLocate: () => void;
   searching: boolean;
   locating: boolean;
-  /** Ändert sich, wenn der Suchpunkt anders gesetzt wurde (z. B. Standort): Feld leeren. */
-  resetKey?: number;
+  /**
+   * Text, den die Seite ins Feld schreibt (Ortsname nach Standort oder Favorit, wiederhergestellte
+   * Suche). `key` zählt hoch, damit auch derselbe Text erneut gesetzt wird.
+   */
+  fill?: { text: string; key: number };
 }
 
-export function SearchForm({ onSearch, onLocate, searching, locating, resetKey = 0 }: Props) {
+export function SearchForm({
+  onSearch,
+  onLocate,
+  searching,
+  locating,
+  fill = { text: "", key: 0 },
+}: Props) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { query: "" },
+    defaultValues: { query: fill.text },
   });
 
   // Sonst bliebe z. B. "Mannheim" stehen, obwohl jetzt am Standort gesucht wird.
   useEffect(() => {
-    if (resetKey > 0) form.reset({ query: "" });
-  }, [resetKey, form]);
+    if (fill.key > 0) form.reset({ query: fill.text });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fill.key]);
 
   return (
     <form

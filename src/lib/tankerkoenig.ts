@@ -105,6 +105,11 @@ export const geocodeInputSchema = z.object({
   query: z.string().min(2).max(120),
 });
 
+export const reverseGeocodeInputSchema = z.object({
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+
 export type ListInput = z.infer<typeof listInputSchema>;
 export type PricesInput = z.infer<typeof pricesInputSchema>;
 export type GeocodeInput = z.input<typeof geocodeInputSchema>;

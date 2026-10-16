@@ -20,6 +20,8 @@ const schema = z.object({
   v: z.literal(1),
   center: coords.nullable(),
   placeLabel: label.nullable(),
+  /** Text im Ortsfeld (eingegeben, oder Ortsname von Standort bzw. Favorit). */
+  queryText: label.optional(),
   radius: z.number().int().min(1).max(25),
   fuel: z.enum(["e5", "e10", "diesel"]),
   sort: z.enum(["price", "distance"]),

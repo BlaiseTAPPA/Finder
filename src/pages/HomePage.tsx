@@ -55,7 +55,12 @@ import { FillUpDialog } from "@/components/fill-up-dialog";
 import { BestChoiceCard } from "@/components/fill-advice";
 import { adviseStations, bestChoice } from "@/lib/budget-advice";
 import { detourScore, estimateDetour, medianPrice } from "@/lib/route-score";
-import { geocodePlace, listStations, refreshPrices } from "@/lib/stations.functions";
+import {
+  geocodePlace,
+  listStations,
+  refreshPrices,
+  reverseGeocodePlace,
+} from "@/lib/stations.functions";
 import { routeStations } from "@/lib/route.functions";
 import { getTrendSummaries, type TrendSummary } from "@/lib/trend.functions";
 import { getCommunityStatuses } from "@/lib/community.functions";
@@ -98,6 +103,13 @@ export function HomePage() {
 
   const [center, setCenter] = useState<Coords | null>(restored?.center ?? null);
   const [placeLabel, setPlaceLabel] = useState<string | null>(restored?.placeLabel ?? null);
+  // Ortsfeld: was dort steht, überlebt Seitenwechsel; `fill` schreibt von außen hinein.
+  const [queryText, setQueryText] = useState(restored?.queryText ?? "");
+  const [fieldFill, setFieldFill] = useState({ text: restored?.queryText ?? "", key: 0 });
+  const fillField = useCallback((text: string) => {
+    setQueryText(text);
+    setFieldFill((fill) => ({ text, key: fill.key + 1 }));
+  }, []);
   const [radius, setRadius] = useState(restored?.radius ?? 5);
   const [committedRadius, setCommittedRadius] = useState(restored?.radius ?? 5);
   const [fuel, setFuel] = useState<FuelType>(restored?.fuel ?? "e5");
@@ -133,6 +145,7 @@ export function HomePage() {
     saveSearchSession({
       center,
       placeLabel,
+      queryText,
       radius: committedRadius,
       fuel,
       sort,
@@ -150,6 +163,7 @@ export function HomePage() {
   }, [
     center,
     placeLabel,
+    queryText,
     committedRadius,
     fuel,
     sort,
@@ -194,6 +208,8 @@ export function HomePage() {
   const callList = useServerFn(listStations);
   const callPrices = useServerFn(refreshPrices);
   const callGeocode = useServerFn(geocodePlace);
+  const callReverse = useServerFn(reverseGeocodePlace);
+  const reverseRequest = useRef(0);
   const callTrends = useServerFn(getTrendSummaries);
   const callCommunity = useServerFn(getCommunityStatuses);
   const contributorId = useContributorId();
@@ -231,9 +247,6 @@ export function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geoPermission]);
 
-  /** Leert das Ortsfeld, sobald am Standort gesucht wird. */
-  const [searchResetKey, setSearchResetKey] = useState(0);
-
   // Position aus dem Browser übernehmen.
   useEffect(() => {
     if (!geo.coords) return;
@@ -244,7 +257,15 @@ export function HomePage() {
     }
     setCenter(geo.coords);
     setPlaceLabel("Aktueller Standort");
-    setSearchResetKey((key) => key + 1);
+    // Ortsname des Standorts ins Feld; ohne Treffer leer statt eines alten Orts.
+    const request = ++reverseRequest.current;
+    callReverse({ data: geo.coords })
+      .then((result) => {
+        if (request === reverseRequest.current) fillField(result.ok ? result.label : "");
+      })
+      .catch(() => {
+        if (request === reverseRequest.current) fillField("");
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geo.coords]);
 
@@ -324,6 +345,9 @@ export function HomePage() {
         if (result.ok) {
           setCenter({ lat: result.lat, lng: result.lng });
           setPlaceLabel(result.label);
+          setQueryText(query);
+          // Eine noch laufende Standort-Ortsabfrage darf das Feld nicht mehr überschreiben.
+          reverseRequest.current++;
         } else {
           setGeoError(result.error);
         }
@@ -570,7 +594,7 @@ export function HomePage() {
               }}
               searching={searching}
               locating={geo.status === "loading"}
-              resetKey={searchResetKey}
+              fill={fieldFill}
             />
             {geo.error && <p className="text-fine mt-2 text-muted-foreground">{geo.error}</p>}
           </div>
@@ -695,7 +719,7 @@ export function HomePage() {
                             setCenter({ lat: station.lat, lng: station.lng });
                             setPlaceLabel(station.name);
                             setActiveId(station.id);
-                            setSearchResetKey((key) => key + 1);
+                            fillField(station.place);
                           }}
                           onShowAllFavorites={() => setTab("favorites")}
                           onSelectTrip={(trip) => {

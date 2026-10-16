@@ -5,7 +5,12 @@ import { waitUntil } from "@vercel/functions";
 import "./src/lib/env.server";
 
 // Schemas & inputs
-import { listInputSchema, pricesInputSchema, geocodeInputSchema } from "./src/lib/tankerkoenig";
+import {
+  listInputSchema,
+  pricesInputSchema,
+  geocodeInputSchema,
+  reverseGeocodeInputSchema,
+} from "./src/lib/tankerkoenig";
 import {
   planRouteInputSchema,
   routeStationsInputSchema,
@@ -39,6 +44,7 @@ import {
   fetchStations,
   fetchPrices,
   geocode,
+  reverseGeocode,
   TankerkoenigError,
 } from "./src/lib/tankerkoenig.server";
 import {
@@ -206,6 +212,17 @@ app.post("/api/stations/geocode", async (req: Request, res: Response) => {
     }
     console.error("[geocodePlace] Erreur :", error);
     res.json({ ok: false, error: { kind: "upstream", message: "Ortssuche fehlgeschlagen." } });
+  }
+});
+
+app.post("/api/stations/reverse-geocode", async (req: Request, res: Response) => {
+  try {
+    const { lat, lng } = reverseGeocodeInputSchema.parse(req.body);
+    const label = await reverseGeocode(lat, lng);
+    res.json(label ? { ok: true, label } : { ok: false });
+  } catch (error) {
+    console.error("[reverseGeocode] Erreur :", error);
+    res.json({ ok: false });
   }
 });
 

@@ -75,7 +75,9 @@ export function DatenschutzPage() {
           <li>
             <strong className="text-foreground">Ortssuche und Adressvorschläge:</strong> Der
             eingegebene Text geht über unseren Server an Nominatim der OpenStreetMap Foundation
-            (Vereinigtes Königreich, angemessenes Datenschutzniveau nach Art. 45 DSGVO).
+            (Vereinigtes Königreich, angemessenes Datenschutzniveau nach Art. 45 DSGVO). Nutzt du
+            deinen Standort, ermitteln wir dort ebenso den Ortsnamen für das Suchfeld – mit auf etwa
+            100 m gerundeten Koordinaten.
           </li>
           <li>
             <strong className="text-foreground">Strecken:</strong> Start- und Zielkoordinaten gehen
