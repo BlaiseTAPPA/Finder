@@ -59,6 +59,77 @@ export const toggleAlertSchema = z.object({
   active: z.boolean(),
 });
 
+// ----- Tankbudget (Feature 0002) -----
+
+export const vehicleSchema = z.object({
+  name: z.string().trim().max(40).nullish(),
+  fuelType: fuel,
+  consumption: z.number().min(2).max(30),
+  tankCapacity: z.number().min(10).max(150),
+});
+
+export const budgetSchema = z.object({
+  amount: z.number().min(1).max(10000),
+  period: z.enum(["weekly", "monthly"]),
+});
+
+const stationSnapshot = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().max(120),
+  brand: z.string().max(80),
+  place: z.string().max(80),
+});
+
+export const fuelLogSchema = z.object({
+  /** ISO-Zeitpunkt des Tankvorgangs; nicht in der Zukunft (5 Min. Toleranz für Uhrabweichungen). */
+  filledAt: z
+    .string()
+    .datetime({ offset: true })
+    .refine((v) => Date.parse(v) <= Date.now() + 5 * 60_000, "Datum liegt in der Zukunft"),
+  station: stationSnapshot.nullable(),
+  fuelType: fuel,
+  liters: z.number().min(0.5).max(150),
+  pricePerLiter: z.number().min(0.5).max(5),
+});
+
+export const fuelLogUpdateSchema = fuelLogSchema.extend({ id: z.string().uuid() });
+export const uuidSchema = z.object({ id: z.string().uuid() });
+export const fuelBudgetQuerySchema = z.object({ since: z.string().datetime({ offset: true }) });
+
+export type BudgetPeriod = z.infer<typeof budgetSchema>["period"];
+export type VehicleInput = z.input<typeof vehicleSchema>;
+export type BudgetInput = z.input<typeof budgetSchema>;
+export type FuelLogInput = z.input<typeof fuelLogSchema>;
+export type FuelLogUpdateInput = z.input<typeof fuelLogUpdateSchema>;
+
+export interface VehicleProfile {
+  name: string | null;
+  fuelType: "e5" | "e10" | "diesel";
+  consumption: number;
+  tankCapacity: number;
+}
+
+export interface FuelBudget {
+  amount: number;
+  period: BudgetPeriod;
+}
+
+export interface FuelLog {
+  id: string;
+  filledAt: string;
+  station: { id: string; name: string; brand: string; place: string } | null;
+  fuelType: "e5" | "e10" | "diesel";
+  liters: number;
+  pricePerLiter: number;
+}
+
+export interface FuelBudgetData {
+  vehicle: VehicleProfile | null;
+  budget: FuelBudget | null;
+  /** Tankvorgänge ab dem angefragten Zeitpunkt, neueste zuerst. */
+  logs: FuelLog[];
+}
+
 /* Eingabetypen für die Client-Aufrufe: z.input, damit Felder mit .default() optional bleiben. */
 export type SetFavoriteInput = z.input<typeof setFavoriteSchema>;
 export type SaveTripInput = z.input<typeof saveTripSchema>;

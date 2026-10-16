@@ -12,6 +12,13 @@ export function formatPrice(value: number | null): string {
   return `${priceFormatter.format(value)} €`;
 }
 
+const euroFormatter = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
+
+/** 84,00 € */
+export function formatEuro(value: number): string {
+  return euroFormatter.format(value);
+}
+
 /** 2,4 km */
 export function formatDistance(km: number): string {
   if (km < 1) return `${Math.round(km * 1000)} m`;
@@ -52,4 +59,23 @@ export function directionsUrl(station: Station): string {
   return isApple
     ? `https://maps.apple.com/?daddr=${station.lat},${station.lng}&q=${label}`
     : `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`;
+}
+
+const litersFormatter = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
+
+/** 42,5 L */
+export function formatLiters(liters: number): string {
+  return `${litersFormatter.format(liters)} L`;
+}
+
+/** "6,5" oder "6.5" → 6.5; leer oder ungültig → null. */
+export function parseDecimal(value: string): number | null {
+  const normalized = value.trim().replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(normalized)) return null;
+  return Number(normalized);
+}
+
+/** 6.5 → "6,5" (Eingabefelder) */
+export function formatDecimal(value: number): string {
+  return String(value).replace(".", ",");
 }

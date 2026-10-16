@@ -133,6 +133,7 @@ src/
     trend.ts, community.ts  Pure, unit-tested domain logic
   styles.css                Design tokens (light/dark), type scale, Leaflet theming
 supabase/migrations/        Database schema, RLS policies, cron jobs
+docs/features/              Implementation prompts for upcoming features (see its README)
 ```
 
 ### API

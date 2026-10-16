@@ -27,6 +27,8 @@ interface Props {
   distanceLabel?: string | undefined;
   /** "stack" = eine Spalte (Kartenkontext), "grid" = mehrspaltig ab md. */
   layout?: "stack" | "grid" | undefined;
+  /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer. */
+  onFillUp?: ((station: Station) => void) | undefined;
 }
 
 export function StationList({
@@ -47,6 +49,7 @@ export function StationList({
   communityStatuses,
   distanceLabel,
   layout = "stack",
+  onFillUp,
 }: Props) {
   const sorted = useMemo(() => {
     const list = [...stations];
@@ -112,6 +115,7 @@ export function StationList({
             community ? { ...community, status: communityStatuses?.get(station.id) } : undefined
           }
           distanceLabel={distanceLabel}
+          onFillUp={onFillUp}
         />
       ))}
     </div>

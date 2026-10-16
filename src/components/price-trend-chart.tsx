@@ -15,7 +15,9 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import type { TrendSummary } from "@/lib/trend.functions";
 import { PriceFigure } from "@/components/price-figure";
+import { TrendDetails } from "@/components/trend-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPriceHistory } from "@/lib/trend.functions";
@@ -27,6 +29,8 @@ interface Props {
   station: Station | null;
   fuel: FuelType;
   onOpenChange: (open: boolean) => void;
+  /** Preisniveau der letzten 7 Tage (früher als Badge auf der Stationskarte). */
+  trend?: TrendSummary | undefined;
 }
 
 /** Mindestens zwei Tage, damit eine Linie entsteht. */
@@ -54,7 +58,7 @@ const axisPrice = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 2,
 });
 
-export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
+export function PriceTrendChart({ station, fuel, onOpenChange, trend }: Props) {
   const [rangeDays, setRangeDays] = useState<HistoryRange>(7);
 
   const query = useQuery({
@@ -79,6 +83,8 @@ export function PriceTrendChart({ station, fuel, onOpenChange }: Props) {
             Tagesdurchschnitt für {FUEL_LABELS[fuel]} · Datenerhebung alle 20 Minuten
           </DialogDescription>
         </DialogHeader>
+
+        <TrendDetails trend={trend} />
 
         <Tabs
           value={String(rangeDays)}

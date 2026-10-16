@@ -1,12 +1,18 @@
 /** Karte einer einzelnen Tankstelle mit Preisen, Status und Aktionen. */
-import { Flag, LineChart, Navigation, Star } from "lucide-react";
+import { Flag, Fuel, LineChart, MoreHorizontal, Navigation, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PriceFigure } from "@/components/price-figure";
 import { directionsUrl, formatDistance } from "@/lib/format";
-import { TrendBadge, TrendHint } from "@/components/trend-badge";
+import { TrendHint } from "@/components/trend-badge";
 import { DetourBadge } from "@/components/detour-badge";
 import { CommunityTrustBadge } from "@/components/community-trust-badge";
 import { ConfirmPriceButton } from "@/components/confirm-price-button";
@@ -53,6 +59,8 @@ interface Props {
   community?: CardCommunity | undefined;
   /** Beschriftung der Entfernung ("Entfernung" bzw. "Abstand zur Route"). */
   distanceLabel?: string | undefined;
+  /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer gesetzt. */
+  onFillUp?: ((station: Station) => void) | undefined;
 }
 
 export function StationCard({
@@ -70,6 +78,7 @@ export function StationCard({
   detour,
   community,
   distanceLabel,
+  onFillUp,
 }: Props) {
   const price = station.prices[fuel];
   const others = FUEL_TYPES.filter((type) => type !== fuel);
@@ -151,7 +160,6 @@ export function StationCard({
       {/* Signale: nur Ausnahmen und Kontext */}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 empty:hidden">
         {!station.isOpen && <Badge variant="negative">Geschlossen</Badge>}
-        <TrendBadge trend={trend} />
         <CommunityTrustBadge status={community?.status} />
         {detour && (
           <DetourBadge
@@ -177,6 +185,19 @@ export function StationCard({
             <Navigation className="size-4" />
             Route
           </Button>
+          {onFillUp && (
+            <Button
+              variant="ghost"
+              className={ghostAction}
+              onClick={(event) => {
+                event.stopPropagation();
+                onFillUp(station);
+              }}
+            >
+              <Fuel className="size-4" />
+              <span className="@max-lg:sr-only">Getankt</span>
+            </Button>
+          )}
           {onOpenTrend && (
             <Button
               variant="ghost"
@@ -187,7 +208,7 @@ export function StationCard({
               }}
             >
               <LineChart className="size-4" />
-              <span className="@max-sm:sr-only">Verlauf</span>
+              <span className="@max-lg:sr-only">Verlauf</span>
             </Button>
           )}
           {community && (
@@ -199,17 +220,26 @@ export function StationCard({
                 userCoords={community.userCoords}
                 onDone={community.onChanged}
               />
-              <Button
-                variant="ghost"
-                className={cn(ghostAction, "text-ink-3")}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  community.onReport(station);
-                }}
-              >
-                <Flag className="size-4" />
-                <span className="@max-sm:sr-only">Melden</span>
-              </Button>
+              {/* Seltene Aktionen hinter "…"; Klicks im Portal nicht zur Karte durchreichen. */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Weitere Aktionen"
+                    className="shrink-0 rounded-md text-ink-3"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                  <DropdownMenuItem onSelect={() => community.onReport(station)}>
+                    <Flag />
+                    Preis melden
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
         </div>
