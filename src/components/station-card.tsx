@@ -16,6 +16,8 @@ import { TrendHint } from "@/components/trend-badge";
 import { DetourBadge } from "@/components/detour-badge";
 import { CommunityTrustBadge } from "@/components/community-trust-badge";
 import { ConfirmPriceButton } from "@/components/confirm-price-button";
+import { FillAdviceLine, type AccessLabel } from "@/components/fill-advice";
+import type { StationAdvice } from "@/lib/budget-advice";
 import type { TrendSummary } from "@/lib/trend.functions";
 import type { CommunityStatus } from "@/lib/community";
 import {
@@ -32,6 +34,13 @@ export interface CardDetour {
   detourKm: number;
   detourMin: number;
   score: number;
+}
+
+/** Budgetbewusste Empfehlung (Feature 0003); nur mit Fahrzeugprofil gesetzt. */
+export interface CardAdvice {
+  value: StationAdvice;
+  accessLabel: AccessLabel;
+  best: boolean;
 }
 
 /** Community-Ebene: rein ergänzend zum offiziellen Tankerkönig-Preis. */
@@ -61,6 +70,7 @@ interface Props {
   distanceLabel?: string | undefined;
   /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer gesetzt. */
   onFillUp?: ((station: Station) => void) | undefined;
+  advice?: CardAdvice | undefined;
 }
 
 export function StationCard({
@@ -79,6 +89,7 @@ export function StationCard({
   community,
   distanceLabel,
   onFillUp,
+  advice,
 }: Props) {
   const price = station.prices[fuel];
   const others = FUEL_TYPES.filter((type) => type !== fuel);
@@ -86,11 +97,12 @@ export function StationCard({
 
   return (
     <Card
+      id={`station-${station.id}`}
       onMouseEnter={() => onHover?.(station.id)}
       onMouseLeave={() => onHover?.(null)}
       onClick={() => onSelect?.(station.id)}
       className={cn(
-        "cursor-pointer gap-0 bg-surface p-4 transition-colors sm:p-5",
+        "cursor-pointer scroll-mt-24 gap-0 bg-surface p-4 transition-colors sm:p-5",
         "hover:border-border-strong",
         active && "border-border-strong bg-surface-sunken/60",
       )}
@@ -160,6 +172,7 @@ export function StationCard({
       {/* Signale: nur Ausnahmen und Kontext */}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 empty:hidden">
         {!station.isOpen && <Badge variant="negative">Geschlossen</Badge>}
+        {advice?.best && <Badge variant="positive">Beste Wahl</Badge>}
         <CommunityTrustBadge status={community?.status} />
         {detour && (
           <DetourBadge
@@ -169,6 +182,8 @@ export function StationCard({
           />
         )}
       </div>
+
+      {advice && <FillAdviceLine advice={advice.value} accessLabel={advice.accessLabel} />}
 
       <TrendHint trend={trend} />
 
