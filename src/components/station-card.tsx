@@ -22,6 +22,7 @@ import {
   FUEL_LABELS,
   FUEL_TYPES,
   formatAddress,
+  formatShortAddress,
   type Coords,
   type FuelType,
   type Station,
@@ -142,7 +143,7 @@ export function StationCard({
         title={`${station.brand} · ${formatAddress(station)}`}
         className="text-caption truncate text-ink-2"
       >
-        {station.brand} · {formatAddress(station)}
+        {formatShortAddress(station)}
       </p>
 
       {/* Übrige Sorten, kompakt in einer Zeile */}

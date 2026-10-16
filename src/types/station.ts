@@ -93,3 +93,18 @@ export function formatAddress(station: Station): string {
   const line2 = [station.postCode, station.place].filter(Boolean).join(" ");
   return [line1, line2].filter(Boolean).join(", ");
 }
+
+/**
+ * Kurzform für die Karte: Straße und Hausnummer, dazu Marke und Ort nur, wenn der
+ * Stationsname sie nicht schon enthält ("TotalEnergies Ludwigshafen" → "Hauptstr. 257").
+ */
+export function formatShortAddress(station: Station): string {
+  const name = station.name.toLocaleLowerCase("de-DE");
+  const missing = (value: string) =>
+    value.trim() !== "" && !name.includes(value.trim().toLocaleLowerCase("de-DE"));
+  const street = [station.street, station.houseNumber].filter(Boolean).join(" ");
+  const brand = missing(station.brand) ? station.brand : "";
+  const place = missing(station.place) ? station.place : "";
+  const location = [street, place].filter(Boolean).join(", ");
+  return [brand, location].filter(Boolean).join(" · ");
+}
