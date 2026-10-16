@@ -50,6 +50,9 @@ import { useFuelBudget, useRefreshFuelBudget } from "@/lib/fuel-budget";
 import { summarizeBudget } from "@/lib/budget";
 import { BudgetStatus } from "@/components/budget-status";
 import { FillUpDialog } from "@/components/fill-up-dialog";
+import { BestChoiceCard } from "@/components/fill-advice";
+import { adviseStations, bestChoice } from "@/lib/budget-advice";
+import { detourScore, estimateDetour, medianPrice } from "@/lib/route-score";
 import { geocodePlace, listStations, refreshPrices } from "@/lib/stations.functions";
 import { routeStations } from "@/lib/route.functions";
 import { getTrendSummaries, type TrendSummary } from "@/lib/trend.functions";
@@ -74,6 +77,16 @@ function MapSkeleton() {
 }
 
 /** Bereichs-Tabs als Unterstrich-Navigation (Segment-Optik bleibt den Filtern vorbehalten). */
+/** Karte einer Station in den Blick holen (Beste Wahl → Anzeigen). */
+function scrollToStation(id: string) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  requestAnimationFrame(() =>
+    document
+      .getElementById(`station-${id}`)
+      ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }),
+  );
+}
+
 const PAGE_TAB =
   "text-body -mb-px h-11 flex-none rounded-none border-b-2 border-transparent px-0.5 font-medium text-ink-2 hover:text-foreground data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none";
 
@@ -424,6 +437,60 @@ export function HomePage() {
     [routeStationList, fuel],
   );
 
+  // ----- Budgetbewusste Empfehlungen (Feature 0003): nur mit Fahrzeug und dessen Kraftstoff -----
+  const adviceVehicle = vehicle && vehicle.fuelType === fuel ? vehicle : null;
+  const remainingBudget = budgetSummary?.remaining ?? null;
+
+  const nearbyAdvice = useMemo(() => {
+    if (!adviceVehicle) return undefined;
+    const byStation = adviseStations({
+      stations,
+      fuel,
+      vehicle: adviceVehicle,
+      remaining: remainingBudget,
+      detourKmOf: (station) => estimateDetour(station.dist).detourKm,
+    });
+    const best = bestChoice(stations, byStation);
+    return { best, bestId: best?.station.id ?? null };
+  }, [adviceVehicle, stations, fuel, remainingBudget]);
+
+  // Bester Kompromiss mit Tankgröße und Verbrauch des Fahrzeugs statt der Annahmen des Servers.
+  const routeDetours = useMemo(() => {
+    if (!adviceVehicle) return detours;
+    const reference = medianPrice(routeStationList.map((station) => station.prices[fuel]));
+    const map = new Map<string, CardDetour>();
+    for (const station of routeStationList) {
+      const detour = detours.get(station.id);
+      if (!detour) continue;
+      map.set(station.id, {
+        ...detour,
+        score: detourScore(station.prices[fuel], reference, detour, {
+          liters: adviceVehicle.tankCapacity,
+          consumption: adviceVehicle.consumption,
+        }),
+      });
+    }
+    return map;
+  }, [adviceVehicle, detours, routeStationList, fuel]);
+
+  const routeAdvice = useMemo(() => {
+    if (!adviceVehicle) return undefined;
+    const byStation = adviseStations({
+      stations: routeStationList,
+      fuel,
+      vehicle: adviceVehicle,
+      remaining: remainingBudget,
+      detourKmOf: (station) => detours.get(station.id)?.detourKm ?? null,
+    });
+    const best = bestChoice(routeStationList, byStation);
+    return { best, bestId: best?.station.id ?? null };
+  }, [adviceVehicle, routeStationList, detours, fuel, remainingBudget]);
+
+  const showStation = useCallback((station: Station) => {
+    setActiveId(station.id);
+    scrollToStation(station.id);
+  }, []);
+
   const applyTrip = useCallback((trip: SavedTrip) => {
     setOrigin({ ...trip.origin, label: trip.originLabel });
     setDestination({ ...trip.destination, label: trip.destinationLabel });
@@ -593,6 +660,15 @@ export function HomePage() {
                   {!error && !showSkeleton && center && stations.length === 0 && (
                     <EmptyState radius={committedRadius} />
                   )}
+                  {!error && !showSkeleton && stations.length > 0 && nearbyAdvice?.best && (
+                    <BestChoiceCard
+                      best={nearbyAdvice.best}
+                      accessLabel="Anfahrt"
+                      trend={trends.get(nearbyAdvice.best.station.id)}
+                      onShow={showStation}
+                      onFillUp={onFillUp}
+                    />
+                  )}
                   {!error && !showSkeleton && stations.length > 0 && (
                     <StationList
                       stations={stations}
@@ -608,6 +684,7 @@ export function HomePage() {
                       community={communityProps}
                       communityStatuses={communityStatuses}
                       onFillUp={onFillUp}
+                      bestId={nearbyAdvice?.bestId}
                     />
                   )}
                 </>
@@ -753,6 +830,18 @@ export function HomePage() {
                         description="Erhöhe die Korridorbreite, um mehr Tankstellen entlang der Strecke zu finden."
                       />
                     )}
+                  {!routeError &&
+                    !routeQuery.isFetching &&
+                    routeStationList.length > 0 &&
+                    routeAdvice?.best && (
+                      <BestChoiceCard
+                        best={routeAdvice.best}
+                        accessLabel="Umweg"
+                        trend={trends.get(routeAdvice.best.station.id)}
+                        onShow={showStation}
+                        onFillUp={onFillUp}
+                      />
+                    )}
                   {!routeError && !routeQuery.isFetching && routeStationList.length > 0 && (
                     <StationList
                       stations={routeStationList}
@@ -768,8 +857,8 @@ export function HomePage() {
                       community={communityProps}
                       communityStatuses={communityStatuses}
                       onFillUp={onFillUp}
-                      detours={detours}
-                      distanceLabel="Abstand zur Route:"
+                      bestId={routeAdvice?.bestId}
+                      detours={routeDetours}
                     />
                   )}
                   {!routeQueryInput && !routeError && (

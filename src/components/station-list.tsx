@@ -24,11 +24,12 @@ interface Props {
   /** Community-Ebene (Badge + Aktionen), ergänzt den Tankerkönig-Preis. */
   community?: Omit<CardCommunity, "status"> | undefined;
   communityStatuses?: Map<string, CommunityStatus> | undefined;
-  distanceLabel?: string | undefined;
   /** "stack" = eine Spalte (Kartenkontext), "grid" = mehrspaltig ab md. */
   layout?: "stack" | "grid" | undefined;
   /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer. */
   onFillUp?: ((station: Station) => void) | undefined;
+  /** Beste Wahl für das Budget (Feature 0003). */
+  bestId?: string | null | undefined;
 }
 
 export function StationList({
@@ -47,9 +48,9 @@ export function StationList({
   detours,
   community,
   communityStatuses,
-  distanceLabel,
   layout = "stack",
   onFillUp,
+  bestId,
 }: Props) {
   const sorted = useMemo(() => {
     const list = [...stations];
@@ -114,8 +115,8 @@ export function StationList({
           community={
             community ? { ...community, status: communityStatuses?.get(station.id) } : undefined
           }
-          distanceLabel={distanceLabel}
           onFillUp={onFillUp}
+          best={station.id === bestId}
         />
       ))}
     </div>

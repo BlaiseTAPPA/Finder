@@ -29,6 +29,14 @@ export function estimateDetour(corridorDistanceKm: number): Detour {
   return { detourKm, detourMin };
 }
 
+/** Fahrzeugwerte statt der Annahmen oben (Tankbudget, Feature 0003). */
+export interface ScoreVehicle {
+  /** Tankmenge (l). */
+  liters: number;
+  /** Verbrauch (l/100 km). */
+  consumption: number;
+}
+
 /**
  * Netto-Ersparnis in Euro: gesparter Spritpreis gegenüber dem
  * Referenzpreis, abzüglich Kraftstoff und Zeit des Umwegs.
@@ -37,10 +45,11 @@ export function detourScore(
   price: number | null,
   referencePrice: number | null,
   detour: Detour,
+  vehicle: ScoreVehicle = { liters: TANK_LITERS, consumption: DETOUR_CONSUMPTION },
 ): number {
   if (price === null || referencePrice === null) return Number.NEGATIVE_INFINITY;
-  const savings = (referencePrice - price) * TANK_LITERS;
-  const fuelCost = ((detour.detourKm * DETOUR_CONSUMPTION) / 100) * price;
+  const savings = (referencePrice - price) * vehicle.liters;
+  const fuelCost = ((detour.detourKm * vehicle.consumption) / 100) * price;
   const timeCost = (detour.detourMin / 60) * TIME_VALUE_EUR_H;
   return savings - fuelCost - timeCost;
 }
