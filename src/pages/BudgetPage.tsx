@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BudgetStatus } from "@/components/budget-status";
+import { BudgetRangeNote } from "@/components/fill-advice";
+import { budgetRange } from "@/lib/budget-advice";
 import { FillUpDialog } from "@/components/fill-up-dialog";
 import { PriceFigure } from "@/components/price-figure";
 import { Notice } from "@/components/states";
@@ -230,6 +232,14 @@ export function BudgetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data],
   );
+  // Reichweite des Restbudgets beim zuletzt bezahlten Preis (Feature 0003).
+  const range = useMemo(() => {
+    if (!summary || !data?.vehicle || data.logs.length === 0) return null;
+    const last = data.logs.reduce((a, b) =>
+      Date.parse(b.filledAt) > Date.parse(a.filledAt) ? b : a,
+    );
+    return budgetRange(summary.remaining, last.pricePerLiter, data.vehicle.consumption);
+  }, [summary, data]);
   const currentLogs = useMemo(
     () => (data ? logsInPeriod(data.logs, periodBounds(period, now)) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -295,6 +305,7 @@ export function BudgetPage() {
           {summary && data.budget ? (
             <div className="mt-6">
               <BudgetStatus summary={summary} period={data.budget.period} variant="full" />
+              {range && <BudgetRangeNote range={range} />}
             </div>
           ) : null}
 

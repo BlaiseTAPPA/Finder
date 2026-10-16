@@ -32,3 +32,4 @@ If the scope changes during implementation, update the prompt in the same PR, so
 | ----------------------------------- | ----------------------------------------------------- | ----------- | -------------------------------------------------- |
 | [0001](0001-design-system-audit.md) | Design system audit and redesign                      | Done        | [#4](https://github.com/BlaiseTAPPA/Finder/pull/4) |
 | [0002](0002-fuel-budget.md)         | Fuel budget, phase 1: vehicle, budget and fill-up log | In progress | —                                                  |
+| [0003](0003-budget-advice.md)       | Fuel budget, phase 2: budget-aware recommendations    | In progress | —                                                  |

@@ -568,6 +568,33 @@ var toggleAlertSchema = z5.object({
   id: z5.string().uuid(),
   active: z5.boolean()
 });
+var vehicleSchema = z5.object({
+  name: z5.string().trim().max(40).nullish(),
+  fuelType: fuel3,
+  consumption: z5.number().min(2).max(30),
+  tankCapacity: z5.number().min(10).max(150)
+});
+var budgetSchema = z5.object({
+  amount: z5.number().min(1).max(1e4),
+  period: z5.enum(["weekly", "monthly"])
+});
+var stationSnapshot = z5.object({
+  id: z5.string().min(1).max(64),
+  name: z5.string().max(120),
+  brand: z5.string().max(80),
+  place: z5.string().max(80)
+});
+var fuelLogSchema = z5.object({
+  /** ISO-Zeitpunkt des Tankvorgangs; nicht in der Zukunft (5 Min. Toleranz für Uhrabweichungen). */
+  filledAt: z5.string().datetime({ offset: true }).refine((v) => Date.parse(v) <= Date.now() + 5 * 6e4, "Datum liegt in der Zukunft"),
+  station: stationSnapshot.nullable(),
+  fuelType: fuel3,
+  liters: z5.number().min(0.5).max(150),
+  pricePerLiter: z5.number().min(0.5).max(5)
+});
+var fuelLogUpdateSchema = fuelLogSchema.extend({ id: z5.string().uuid() });
+var uuidSchema = z5.object({ id: z5.string().uuid() });
+var fuelBudgetQuerySchema = z5.object({ since: z5.string().datetime({ offset: true }) });
 
 // server.ts
 init_tankerkoenig_server();
@@ -1018,10 +1045,10 @@ function estimateDetour(corridorDistanceKm) {
   const detourMin = detourKm / DETOUR_SPEED_KMH * 60 + DETOUR_FIXED_MIN;
   return { detourKm, detourMin };
 }
-function detourScore(price, referencePrice, detour) {
+function detourScore(price, referencePrice, detour, vehicle = { liters: TANK_LITERS, consumption: DETOUR_CONSUMPTION }) {
   if (price === null || referencePrice === null) return Number.NEGATIVE_INFINITY;
-  const savings = (referencePrice - price) * TANK_LITERS;
-  const fuelCost = detour.detourKm * DETOUR_CONSUMPTION / 100 * price;
+  const savings = (referencePrice - price) * vehicle.liters;
+  const fuelCost = detour.detourKm * vehicle.consumption / 100 * price;
   const timeCost = detour.detourMin / 60 * TIME_VALUE_EUR_H;
   return savings - fuelCost - timeCost;
 }
@@ -1467,6 +1494,111 @@ async function latestPrices2(stationIds) {
     if (entry[row.fuel_type] === void 0) entry[row.fuel_type] = Number(row.price);
   }
   return out;
+}
+function toFuelLog(row) {
+  return {
+    id: row.id,
+    filledAt: row.filled_at,
+    station: row.station_id ? {
+      id: row.station_id,
+      name: row.station_name ?? "",
+      brand: row.station_brand ?? "",
+      place: row.station_place ?? ""
+    } : null,
+    fuelType: row.fuel_type,
+    liters: Number(row.liters),
+    pricePerLiter: Number(row.price_per_liter)
+  };
+}
+function fuelLogColumns(input) {
+  return {
+    filled_at: new Date(input.filledAt).toISOString(),
+    station_id: input.station?.id ?? null,
+    station_name: input.station?.name ?? null,
+    station_brand: input.station?.brand ?? null,
+    station_place: input.station?.place ?? null,
+    fuel_type: input.fuelType,
+    liters: input.liters,
+    price_per_liter: input.pricePerLiter
+  };
+}
+async function getFuelBudgetData(clerkUserId, since) {
+  const db = await admin3();
+  const [vehicle, budget, logs] = await Promise.all([
+    db.from("vehicle_profiles").select("name, fuel_type, consumption_l_per_100km, tank_capacity_l").eq("clerk_user_id", clerkUserId).maybeSingle(),
+    db.from("fuel_budgets").select("amount_eur, period").eq("clerk_user_id", clerkUserId).maybeSingle(),
+    db.from("fuel_logs").select(
+      "id, filled_at, station_id, station_name, station_brand, station_place, fuel_type, liters, price_per_liter"
+    ).eq("clerk_user_id", clerkUserId).gte("filled_at", new Date(since).toISOString()).order("filled_at", { ascending: false }).limit(1e3)
+  ]);
+  check(vehicle.error, "getVehicle");
+  check(budget.error, "getBudget");
+  check(logs.error, "listFuelLogs");
+  const v = vehicle.data;
+  const b = budget.data;
+  return {
+    vehicle: v ? {
+      name: v.name,
+      fuelType: v.fuel_type,
+      consumption: Number(v.consumption_l_per_100km),
+      tankCapacity: Number(v.tank_capacity_l)
+    } : null,
+    budget: b && (b.period === "weekly" || b.period === "monthly") ? { amount: Number(b.amount_eur), period: b.period } : null,
+    logs: (logs.data ?? []).map(toFuelLog)
+  };
+}
+async function upsertVehicle(clerkUserId, input) {
+  const db = await admin3();
+  const name = input.name?.trim() || null;
+  const { error } = await db.from("vehicle_profiles").upsert(
+    {
+      clerk_user_id: clerkUserId,
+      name,
+      fuel_type: input.fuelType,
+      consumption_l_per_100km: input.consumption,
+      tank_capacity_l: input.tankCapacity,
+      updated_at: (/* @__PURE__ */ new Date()).toISOString()
+    },
+    { onConflict: "clerk_user_id" }
+  );
+  check(error, "upsertVehicle");
+  return {
+    name,
+    fuelType: input.fuelType,
+    consumption: input.consumption,
+    tankCapacity: input.tankCapacity
+  };
+}
+async function upsertBudget(clerkUserId, input) {
+  const db = await admin3();
+  const { error } = await db.from("fuel_budgets").upsert(
+    {
+      clerk_user_id: clerkUserId,
+      amount_eur: input.amount,
+      period: input.period,
+      updated_at: (/* @__PURE__ */ new Date()).toISOString()
+    },
+    { onConflict: "clerk_user_id" }
+  );
+  check(error, "upsertBudget");
+  return { amount: input.amount, period: input.period };
+}
+async function addFuelLog(clerkUserId, input) {
+  const db = await admin3();
+  const { data, error } = await db.from("fuel_logs").insert({ clerk_user_id: clerkUserId, ...fuelLogColumns(input) }).select("id").single();
+  check(error, "addFuelLog");
+  return data.id;
+}
+async function updateFuelLog(clerkUserId, id, input) {
+  const db = await admin3();
+  const { data, error } = await db.from("fuel_logs").update(fuelLogColumns(input)).eq("clerk_user_id", clerkUserId).eq("id", id).select("id");
+  check(error, "updateFuelLog");
+  return (data ?? []).length > 0;
+}
+async function deleteFuelLog(clerkUserId, id) {
+  const db = await admin3();
+  const { error } = await db.from("fuel_logs").delete().eq("clerk_user_id", clerkUserId).eq("id", id);
+  check(error, "deleteFuelLog");
 }
 
 // server.ts
@@ -1924,6 +2056,78 @@ app.post("/api/account/remove-alert", async (req, res) => {
     res.status(500).json({ error: "Preisalarm konnte nicht gel\xF6scht werden" });
   }
 });
+function accountRoute(name, failure, handler) {
+  return async (req, res) => {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    try {
+      res.json(await handler(userId, req.body));
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "Ung\xFCltige Eingabe", issues: error.issues });
+        return;
+      }
+      console.error(`[account/${name}] Erreur :`, error);
+      res.status(500).json({ error: failure });
+    }
+  };
+}
+app.post(
+  "/api/account/fuel-budget",
+  accountRoute(
+    "fuel-budget",
+    "Budgetdaten konnten nicht geladen werden",
+    (userId, body) => getFuelBudgetData(userId, fuelBudgetQuerySchema.parse(body).since)
+  )
+);
+app.post(
+  "/api/account/vehicle",
+  accountRoute(
+    "vehicle",
+    "Fahrzeug konnte nicht gespeichert werden",
+    (userId, body) => upsertVehicle(userId, vehicleSchema.parse(body))
+  )
+);
+app.post(
+  "/api/account/budget",
+  accountRoute(
+    "budget",
+    "Budget konnte nicht gespeichert werden",
+    (userId, body) => upsertBudget(userId, budgetSchema.parse(body))
+  )
+);
+app.post(
+  "/api/account/fuel-log",
+  accountRoute("fuel-log", "Tankvorgang konnte nicht gespeichert werden", async (userId, body) => {
+    const id = await addFuelLog(userId, fuelLogSchema.parse(body));
+    return { ok: true, id };
+  })
+);
+app.post(
+  "/api/account/fuel-log/update",
+  accountRoute(
+    "fuel-log/update",
+    "Tankvorgang konnte nicht ge\xE4ndert werden",
+    async (userId, body) => {
+      const { id, ...input } = fuelLogUpdateSchema.parse(body);
+      return { ok: await updateFuelLog(userId, id, input) };
+    }
+  )
+);
+app.post(
+  "/api/account/fuel-log/delete",
+  accountRoute(
+    "fuel-log/delete",
+    "Tankvorgang konnte nicht gel\xF6scht werden",
+    async (userId, body) => {
+      await deleteFuelLog(userId, uuidSchema.parse(body).id);
+      return { ok: true };
+    }
+  )
+);
 var runPriceCollection = async () => {
   const BATCH_SIZE = 100;
   const MAX_BATCHES = 10;
