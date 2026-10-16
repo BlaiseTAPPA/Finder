@@ -60,9 +60,12 @@ export function DatenschutzPage() {
       <LegalSection id="ds-suche" title="4. Standort, Suche und Strecken">
         <List>
           <li>
-            <strong className="text-foreground">Standort:</strong> Nur wenn du auf „Standort“
-            tippst, fragt dein Browser nach deiner Erlaubnis. Die Koordinaten nutzen wir
-            ausschließlich für die Suche und speichern sie nicht in einem Konto.
+            <strong className="text-foreground">Standort:</strong> Nur wenn du auf „Standort“ bzw.
+            „Standort verwenden“ tippst, fragt dein Browser nach deiner Erlaubnis. Hast du sie
+            erteilt, ermittelt die App deinen Standort beim Öffnen automatisch, um die Preise in
+            deiner Nähe zu zeigen; die Freigabe kannst du jederzeit in den Browser-Einstellungen
+            widerrufen. Die Koordinaten nutzen wir ausschließlich für die Suche und speichern sie
+            nicht in einem Konto.
           </li>
           <li>
             <strong className="text-foreground">Tankstellensuche:</strong> Der Suchpunkt
@@ -107,11 +110,13 @@ export function DatenschutzPage() {
       <LegalSection id="ds-geraet" title="6. Speicherung auf deinem Gerät">
         <p>
           Die App speichert im lokalen Speicher deines Browsers (localStorage): Favoriten,
-          gespeicherte Strecken, die letzte Suche, eine zufällige Kennung für Preismeldungen und ob
-          du die Fahrzeugabfrage übersprungen hast. Für die Offline-Nutzung speichert ein Service
-          Worker Programmdateien. Diese Speicherungen sind für die von dir genutzten Funktionen
-          unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Du kannst sie jederzeit über die
-          Browser-Einstellungen löschen.
+          gespeicherte Strecken, eine zufällige Kennung für Preismeldungen, ob du die
+          Fahrzeugabfrage übersprungen hast, an welchen der letzten Tage du die App genutzt hast und
+          ob du den Installationshinweis ausgeblendet oder die App installiert hast. Die letzte
+          Suche liegt nur für die laufende Sitzung im sessionStorage. Für die Offline-Nutzung
+          speichert ein Service Worker Programmdateien. Diese Speicherungen sind für die von dir
+          genutzten Funktionen unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Du kannst sie
+          jederzeit über die Browser-Einstellungen löschen.
         </p>
       </LegalSection>
 

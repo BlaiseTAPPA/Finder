@@ -43,7 +43,9 @@ import { cn } from "@/lib/utils";
 import { EmptyState, ErrorState, Notice, StartState, StationSkeletons } from "@/components/states";
 import { useFavorites } from "@/lib/favorites";
 import { useTripFavorites } from "@/lib/route-favorites";
-import { useGeolocation } from "@/lib/geolocation";
+import { useGeoPermission, useGeolocation } from "@/lib/geolocation";
+import { InstallBanner } from "@/components/install-banner";
+import { useSearchParams } from "react-router-dom";
 import { cheapestStationId, formatRelativeTime } from "@/lib/format";
 import { loadSearchSession, saveSearchSession } from "@/lib/search-session";
 import { useFuelBudget, useRefreshFuelBudget } from "@/lib/fuel-budget";
@@ -162,6 +164,8 @@ export function HomePage() {
   ]);
 
   const geo = useGeolocation();
+  const geoPermission = useGeoPermission();
+  const [searchParams, setSearchParams] = useSearchParams();
   const favorites = useFavorites();
 
   // ----- Tankbudget (Feature 0002, nur angemeldet) -----
@@ -194,6 +198,45 @@ export function HomePage() {
   const callCommunity = useServerFn(getCommunityStatuses);
   const contributorId = useContributorId();
   const callRouteStations = useServerFn(routeStations);
+
+  // ----- "Öffnen und wissen" (Feature 0006) -----
+  const autoLocated = useRef(false);
+
+  // Home-Bildschirm-Verknüpfungen: einmal auswerten, dann aus der URL entfernen.
+  useEffect(() => {
+    const shortcut = searchParams.get("standort") === "1";
+    const tabParam = searchParams.get("tab");
+    if (!shortcut && !tabParam) return;
+    if (shortcut) {
+      // Ausdrücklicher Wunsch: hier darf die Freigabe-Abfrage erscheinen.
+      autoLocated.current = true;
+      setTab("search");
+      setLocateTarget("search");
+      geo.request();
+    } else if (tabParam === "favoriten") {
+      setTab("favorites");
+    }
+    setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Bereits erteilte Freigabe: beim Start ohne wiederhergestellte Suche direkt orten.
+  // Ohne Freigabe nie von selbst fragen.
+  useEffect(() => {
+    if (autoLocated.current || geoPermission !== "granted") return;
+    autoLocated.current = true;
+    if (restored?.center || center) return;
+    setLocateTarget("search");
+    geo.request();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoPermission]);
+
+  const locateHere = useCallback(() => {
+    setGeoError(null);
+    setLocateTarget("search");
+    geo.request();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.request]);
 
   // Position aus dem Browser übernehmen.
   useEffect(() => {
@@ -504,6 +547,8 @@ export function HomePage() {
     });
   }, []);
 
+  const hasSearch = center !== null || routeQueryInput !== null;
+
   return (
     <div className="min-h-screen w-full overflow-x-clip bg-background">
       <SiteHeader tab={tab} onTab={setTab} favoritesCount={favorites.favorites.length} />
@@ -511,9 +556,14 @@ export function HomePage() {
       {/* Hero + Suche */}
       <section className="w-full border-b border-border bg-surface">
         <div className="mx-auto max-w-6xl px-safe py-4 sm:py-6">
-          <h1 className="text-title text-foreground">Günstig tanken. Ganz in der Nähe.</h1>
-          <p className="text-caption mt-1 text-ink-2">Live-Preise für Super E5, E10 und Diesel</p>
-          <div className="mt-4 max-w-2xl">
+          {/* Mit Ergebnissen rückt die Liste nach oben; die Überschrift bleibt für Screenreader. */}
+          <h1 className={cn("text-title text-foreground", hasSearch && "sr-only")}>
+            Günstig tanken. Ganz in der Nähe.
+          </h1>
+          {!hasSearch && (
+            <p className="text-caption mt-1 text-ink-2">Live-Preise für Super E5, E10 und Diesel</p>
+          )}
+          <div className={cn("max-w-2xl", !hasSearch && "mt-4")}>
             <SearchForm
               onSearch={handleSearch}
               onLocate={() => {
@@ -546,6 +596,8 @@ export function HomePage() {
               {favorites.favorites.length > 0 && ` (${favorites.favorites.length})`}
             </TabsTrigger>
           </TabsList>
+
+          <InstallBanner className="mb-5" />
 
           <TabsContent value="search" className="mt-0">
             {/* Steuerung: auf Mobile einklappbar, ab md dauerhaft sichtbar */}
@@ -624,7 +676,11 @@ export function HomePage() {
                 <>
                   {!center && !error && (
                     <>
-                      <StartState />
+                      <StartState
+                        permission={geoPermission}
+                        locating={geo.status === "loading" && locateTarget === "search"}
+                        onLocate={locateHere}
+                      />
                       {budgetSummary && fuelBudget.data?.budget && (
                         <div className="mt-6">
                           <BudgetStatus

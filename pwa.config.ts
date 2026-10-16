@@ -31,6 +31,23 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     background_color: "#ffffff",
     theme_color: "#1a1a1c",
     categories: ["navigation", "travel", "utilities"],
+    // Lange auf das App-Symbol drücken (Feature 0006); HomePage wertet die Parameter einmal aus.
+    shortcuts: [
+      {
+        name: "In der Nähe",
+        short_name: "In der Nähe",
+        description: "Günstigste Tankstellen am aktuellen Standort",
+        url: "/?standort=1",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Favoriten",
+        short_name: "Favoriten",
+        description: "Aktuelle Preise deiner Favoriten",
+        url: "/?tab=favoriten",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+    ],
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },

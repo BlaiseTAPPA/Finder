@@ -1,7 +1,18 @@
 /** Lade-, Leer- und Fehlerzustände. */
-import { AlertTriangle, KeyRound, MapPinOff, SearchX, Timer } from "lucide-react";
+import {
+  AlertTriangle,
+  KeyRound,
+  Loader2,
+  LocateFixed,
+  MapPin,
+  MapPinOff,
+  SearchX,
+  Timer,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { GeoPermission } from "@/lib/geolocation";
 import type { ApiErrorShape } from "@/types/station";
 
 export function StationSkeletons({ count = 4 }: { count?: number }) {
@@ -62,14 +73,40 @@ export function EmptyState({ radius }: { radius: number }) {
   );
 }
 
-export function StartState({ children }: { children?: React.ReactNode }) {
+/**
+ * Startzustand ohne Suche. Mit noch nicht erteilter Freigabe erklärt er den Vorteil und bietet
+ * "Standort verwenden" an – die Browser-Abfrage kommt erst nach diesem Tippen (Feature 0006).
+ */
+export function StartState({
+  permission = "unknown",
+  locating = false,
+  onLocate,
+}: {
+  permission?: GeoPermission;
+  locating?: boolean;
+  onLocate?: (() => void) | undefined;
+}) {
+  if (permission === "denied") {
+    return (
+      <Notice
+        icon={<MapPinOff />}
+        title="Wo möchtest du tanken?"
+        description="Die Standortfreigabe ist in deinem Browser blockiert. Suche oben nach Ort oder Postleitzahl – oder erlaube den Standort in den Browser-Einstellungen."
+      />
+    );
+  }
   return (
     <Notice
-      icon={<MapPinOff />}
+      icon={<MapPin />}
       title="Wo möchtest du tanken?"
-      description="Suche oben nach Ort oder Postleitzahl – oder nutze deinen Standort."
+      description="Mit deinem Standort öffnet die App künftig direkt mit den Preisen in deiner Nähe. Oder suche oben nach Ort oder Postleitzahl."
     >
-      {children}
+      {onLocate && (
+        <Button onClick={onLocate} disabled={locating}>
+          {locating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
+          Standort verwenden
+        </Button>
+      )}
     </Notice>
   );
 }
