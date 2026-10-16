@@ -1,4 +1,4 @@
-/** Eingabe eines Trajets: Start, Ziel, Korridorbreite. */
+/** Eingabe einer Strecke: Start, Ziel, Korridorbreite. */
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@/lib/server-fn-client";
 import { ArrowRight, Crosshair, Loader2, Search } from "lucide-react";
@@ -197,7 +197,7 @@ export function RouteForm({
           disabled={searching || !origin || !destination}
         >
           {searching ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
-          Trajet suchen
+          Strecke suchen
         </Button>
       </div>
 

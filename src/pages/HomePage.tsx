@@ -109,7 +109,7 @@ export function HomePage() {
   const [tab, setTab] = useState<MainTab>(restored?.tab ?? "search");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // ----- Trajet-Ansicht -----
+  // ----- Streckenansicht -----
   const [origin, setOrigin] = useState<TripPoint | null>(restored?.trip.origin ?? null);
   const [destination, setDestination] = useState<TripPoint | null>(
     restored?.trip.destination ?? null,
@@ -368,7 +368,7 @@ export function HomePage() {
 
   const showSkeleton = listQuery.isLoading && center !== null;
 
-  // ----- Trajet: Stationen im Korridor -----
+  // ----- Strecke: Stationen im Korridor -----
   const routeQuery = useQuery({
     queryKey: [
       "route-stations",
@@ -538,7 +538,7 @@ export function HomePage() {
             </TabsTrigger>
             <TabsTrigger value="trip" className={PAGE_TAB}>
               <RouteIcon />
-              Trajet
+              Strecke
             </TabsTrigger>
             <TabsTrigger value="favorites" className={PAGE_TAB}>
               <Star />
@@ -758,7 +758,7 @@ export function HomePage() {
               }}
             />
 
-            {/* Trajet speichern */}
+            {/* Strecke speichern */}
             {origin && destination && (
               <div className="mt-4 grid min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center">
                 <Input
@@ -785,7 +785,7 @@ export function HomePage() {
                   }}
                 >
                   <Save className="size-4" />
-                  Trajet speichern
+                  Strecke speichern
                 </Button>
               </div>
             )}
@@ -894,7 +894,7 @@ export function HomePage() {
                   </ClientOnly>
                 ) : (
                   <div className="text-caption flex h-full items-center justify-center bg-surface-sunken text-muted-foreground">
-                    Die Karte erscheint nach der Trajet-Suche.
+                    Die Karte erscheint nach der Streckensuche.
                   </div>
                 )
               }

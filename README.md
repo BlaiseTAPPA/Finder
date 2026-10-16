@@ -7,7 +7,7 @@ Prices come from [Tankerkönig](https://creativecommons.tankerkoenig.de/) (CC BY
 ## Features
 
 - **Nearby search:** search by place, postcode or current location within 1–25 km. Results are sorted by price or distance, shown as a list and on a map, and prices refresh every 5 minutes.
-- **Trip search ("Trajet"):** stations within a corridor along a driving route, ranked by best value, price or smallest detour, with the estimated detour per station.
+- **Trip search ("Strecke"):** stations within a corridor along a driving route, ranked by best value, price or smallest detour, with the estimated detour per station.
 - **Price trends:** an own price history, since Tankerkönig only provides current prices.
   - Each station shows a low/average/high badge against the last 7 days.
   - A hint tells you when prices are usually lowest in the day.
@@ -90,17 +90,18 @@ With only `TANKERKOENIG_API_KEY` set, the nearby and trip search work. Trends, c
 
 Environment variables are read from `.env` in development and from the hosting provider in production. Variables prefixed with `VITE_` are compiled into the frontend and are therefore **public**.
 
-| Variable                                                      | Required            | Purpose                                                                                                                                                |
-| ------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `TANKERKOENIG_API_KEY`                                        | **yes**             | Tankerkönig API key. Server-only: all price requests go through `/api/stations/*`.                                                                     |
-| `SUPABASE_URL`                                                | for data features   | Supabase project URL (server)                                                                                                                          |
-| `SUPABASE_SERVICE_ROLE_KEY`                                   | for data features   | Service role key, server-only, never exposed to the browser                                                                                            |
-| `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY`         | for data features   | Supabase client config                                                                                                                                 |
-| `CLERK_SECRET_KEY`                                            | for accounts        | Clerk secret key (server)                                                                                                                              |
-| `VITE_CLERK_PUBLISHABLE_KEY`                                  | for accounts        | Clerk publishable key. Can also be served at runtime via `CLERK_PUBLISHABLE_KEY` and `/api/account/clerk-key`. Without it, the app runs in guest mode. |
-| `CRON_SECRET`                                                 | recommended in prod | Shared secret required by the price-collection endpoint (`x-cron-secret` header)                                                                       |
-| `OSRM_BASE_URL`                                               | no                  | Routing server; defaults to the public `https://router.project-osrm.org`                                                                               |
-| `VITE_MAP_DARK_TILES_URL` / `VITE_MAP_DARK_TILES_ATTRIBUTION` | no                  | A keyed dark map style (e.g. MapTiler, Stadia) for dark mode. Without it, dark mode dims the OSM tiles.                                                |
+| Variable                                                         | Required            | Purpose                                                                                                                                                                                                              |
+| ---------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TANKERKOENIG_API_KEY`                                           | **yes**             | Tankerkönig API key. Server-only: all price requests go through `/api/stations/*`.                                                                                                                                   |
+| `SUPABASE_URL`                                                   | for data features   | Supabase project URL (server)                                                                                                                                                                                        |
+| `SUPABASE_SERVICE_ROLE_KEY`                                      | for data features   | Service role key, server-only, never exposed to the browser                                                                                                                                                          |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY`            | for data features   | Supabase client config                                                                                                                                                                                               |
+| `CLERK_SECRET_KEY`                                               | for accounts        | Clerk secret key (server)                                                                                                                                                                                            |
+| `VITE_CLERK_PUBLISHABLE_KEY`                                     | for accounts        | Clerk publishable key. Can also be served at runtime via `CLERK_PUBLISHABLE_KEY` and `/api/account/clerk-key`. Without it, the app runs in guest mode.                                                               |
+| `CRON_SECRET`                                                    | recommended in prod | Shared secret required by the price-collection endpoint (`x-cron-secret` header)                                                                                                                                     |
+| `OSRM_BASE_URL`                                                  | no                  | Routing server; defaults to the public `https://router.project-osrm.org`                                                                                                                                             |
+| `VITE_MAP_DARK_TILES_URL` / `VITE_MAP_DARK_TILES_ATTRIBUTION`    | no                  | A keyed dark map style (e.g. MapTiler, Stadia) for dark mode. Without it, dark mode dims the OSM tiles.                                                                                                              |
+| `VITE_LEGAL_NAME` / `_STREET` / `_POSTCODE` / `_CITY` / `_EMAIL` | **yes, in prod**    | Operator details for `/impressum` and `/datenschutz` (§ 5 DDG). Kept out of the repository; the pages show a warning while any is missing. Optional: `VITE_LEGAL_COUNTRY` (default Deutschland), `VITE_LEGAL_PHONE`. |
 
 ## Architecture
 

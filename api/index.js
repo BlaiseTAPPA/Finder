@@ -1182,7 +1182,7 @@ async function collectRouteStations(route, corridorKm, fuel4) {
   return inCorridor.map(({ station, corridorKm: distance }) => {
     const detour = estimateDetour(distance);
     return {
-      // `dist` bezeichnet in der Trajet-Ansicht den Abstand zur Route.
+      // `dist` bezeichnet in der Streckenansicht den Abstand zur Route.
       station: { ...station, dist: distance },
       corridorKm: distance,
       detourKm: detour.detourKm,

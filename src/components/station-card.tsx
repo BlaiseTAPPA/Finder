@@ -27,7 +27,7 @@ import {
   type Station,
 } from "@/types/station";
 
-/** Umweg-Information der Trajet-Ansicht (in der Umkreissuche nicht gesetzt). */
+/** Umweg-Information der Streckenansicht (in der Umkreissuche nicht gesetzt). */
 export interface CardDetour {
   detourKm: number;
   detourMin: number;

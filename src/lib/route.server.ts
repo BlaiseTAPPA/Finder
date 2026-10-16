@@ -44,7 +44,7 @@ export async function planRouteServer(origin: Coords, destination: Coords): Prom
 
 export { RoutingError };
 
-/** Maximale Anzahl list.php-Aufrufe pro Trajet (Quota-Schutz). */
+/** Maximale Anzahl list.php-Aufrufe pro Strecke (Quota-Schutz). */
 const MAX_PROBES = 12;
 
 /**
@@ -95,7 +95,7 @@ export async function collectRouteStations(
   return inCorridor.map(({ station, corridorKm: distance }) => {
     const detour = estimateDetour(distance);
     return {
-      // `dist` bezeichnet in der Trajet-Ansicht den Abstand zur Route.
+      // `dist` bezeichnet in der Streckenansicht den Abstand zur Route.
       station: { ...station, dist: distance },
       corridorKm: distance,
       detourKm: detour.detourKm,

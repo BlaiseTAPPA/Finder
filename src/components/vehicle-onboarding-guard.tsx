@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { isVehicleOnboardingSkipped, useFuelBudget } from "@/lib/fuel-budget";
 
 /** Seiten, auf denen nicht umgeleitet wird (/budget fragt selbst nach dem Fahrzeug). */
-const EXEMPT = ["/fahrzeug", "/sign-in", "/sign-up", "/budget"];
+const EXEMPT = ["/fahrzeug", "/sign-in", "/sign-up", "/budget", "/impressum", "/datenschutz"];
 
 export function VehicleOnboardingGuard() {
   const { data, isSuccess, enabled, userId } = useFuelBudget();
