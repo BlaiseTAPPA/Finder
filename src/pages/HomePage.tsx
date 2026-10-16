@@ -859,7 +859,6 @@ export function HomePage() {
                       onFillUp={onFillUp}
                       bestId={routeAdvice?.bestId}
                       detours={routeDetours}
-                      distanceLabel="Abstand zur Route:"
                     />
                   )}
                   {!routeQueryInput && !routeError && (

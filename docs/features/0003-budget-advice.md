@@ -26,7 +26,7 @@ Phase 1 ([0002](0002-fuel-budget.md)) tells signed-in users what they've spent a
 
 **Personalised "Bester Kompromiss" on trips:** `detourScore` in `route-score.ts` accepts the vehicle's tank capacity and consumption instead of the fixed 50 L / 7 L/100 km. Without a vehicle, the server's score stays as is.
 
-**Station card** (signed-in, vehicle saved, selected fuel = vehicle fuel): only "Beste Wahl" in the label above the price, like "Günstigster". The cards were already dense, so the costs and the budget stay in the best-choice card. On trips, the detour becomes a plain text line ("Umweg +3 Min · +1,1 km · spart ca. 3,67 €") instead of a pill and a separate saving.
+**Station card** (signed-in, vehicle saved, selected fuel = vehicle fuel): only "Beste Wahl" in the label above the price, like "Günstigster". The cards were already dense, so the costs and the budget stay in the best-choice card. On trips, the detour replaces the distance to the route in the top-right corner ("+3 Min", "Umweg +462 m" below), and the saving joins the label above the price ("spart ca. 3,41 € · Super E10"). The label holds at most two hints, in the order Beste Wahl, saving, Günstigster; the fuel name is dropped when two are shown.
 
 **"Beste Wahl für dein Budget" card** above the results, in the nearby and trip views:
 

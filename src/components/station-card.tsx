@@ -11,9 +11,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PriceFigure } from "@/components/price-figure";
-import { directionsUrl, formatDistance } from "@/lib/format";
+import { directionsUrl, formatDistance, formatEuro } from "@/lib/format";
 import { TrendHint } from "@/components/trend-badge";
-import { DetourBadge } from "@/components/detour-badge";
 import { CommunityTrustBadge } from "@/components/community-trust-badge";
 import { ConfirmPriceButton } from "@/components/confirm-price-button";
 import type { TrendSummary } from "@/lib/trend.functions";
@@ -34,6 +33,11 @@ export interface CardDetour {
   detourMin: number;
   score: number;
 }
+
+/** Ab dieser Netto-Ersparnis lohnt der Umweg sichtbar. */
+const MIN_DETOUR_SAVING = 0.2;
+/** Mehr Hinweise passen nicht neben den Preis; die Sorte steht dann im Filter. */
+const MAX_TAGS = 2;
 
 /** Community-Ebene: rein ergänzend zum offiziellen Tankerkönig-Preis. */
 export interface CardCommunity {
@@ -58,8 +62,6 @@ interface Props {
   onOpenTrend?: ((station: Station) => void) | undefined;
   detour?: CardDetour | undefined;
   community?: CardCommunity | undefined;
-  /** Beschriftung der Entfernung ("Entfernung" bzw. "Abstand zur Route"). */
-  distanceLabel?: string | undefined;
   /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer gesetzt. */
   onFillUp?: ((station: Station) => void) | undefined;
   /** Beste Wahl für das Budget (Feature 0003); Details stehen in der Karte über der Liste. */
@@ -80,13 +82,24 @@ export function StationCard({
   onOpenTrend,
   detour,
   community,
-  distanceLabel,
   onFillUp,
   best = false,
 }: Props) {
   const price = station.prices[fuel];
   const others = FUEL_TYPES.filter((type) => type !== fuel);
   const ghostAction = "min-w-11 px-3 text-ink-2";
+  const saving =
+    detour && Number.isFinite(detour.score) && detour.score > MIN_DETOUR_SAVING
+      ? detour.score
+      : null;
+  // Hinweise über dem Preis, wichtigste zuerst.
+  const tags = [
+    best && "Beste Wahl",
+    saving !== null && `spart ca. ${formatEuro(saving)}`,
+    cheapest && "Günstigster",
+  ]
+    .filter((tag): tag is string => Boolean(tag))
+    .slice(0, MAX_TAGS);
 
   return (
     <Card
@@ -100,13 +113,17 @@ export function StationCard({
         active && "border-border-strong bg-surface-sunken/60",
       )}
     >
-      {/* Preis zuerst: ausgewählte Sorte groß, Entfernung rechts daneben */}
+      {/* Preis zuerst: ausgewählte Sorte groß, Entfernung bzw. Umweg rechts daneben */}
       <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-x-3">
         <div className="min-w-0">
           <p className="text-fine font-medium text-ink-2">
-            {cheapest ? <span className="font-semibold text-price-low">Günstigster · </span> : null}
-            {best ? <span className="font-semibold text-price-low">Beste Wahl · </span> : null}
-            {FUEL_LABELS[fuel]}
+            {tags.length > 0 && (
+              <span className="font-semibold text-price-low">
+                {tags.join(" · ")}
+                {tags.length < MAX_TAGS && " · "}
+              </span>
+            )}
+            {tags.length < MAX_TAGS && FUEL_LABELS[fuel]}
           </p>
           <p
             className={cn("text-price-xl mt-1", price === null ? "text-ink-3" : "text-foreground")}
@@ -116,10 +133,18 @@ export function StationCard({
         </div>
 
         <div className="pt-0.5 text-right">
-          <p className="num text-body font-semibold text-foreground">
-            {formatDistance(station.dist)}
-          </p>
-          {distanceLabel && <p className="text-fine text-ink-3">{distanceLabel}</p>}
+          {detour ? (
+            <>
+              <p className="num text-body font-semibold text-foreground">
+                +{Math.round(detour.detourMin)} Min
+              </p>
+              <p className="text-fine num text-ink-3">Umweg +{formatDistance(detour.detourKm)}</p>
+            </>
+          ) : (
+            <p className="num text-body font-semibold text-foreground">
+              {formatDistance(station.dist)}
+            </p>
+          )}
         </div>
 
         <button
@@ -168,14 +193,6 @@ export function StationCard({
         {!station.isOpen && <Badge variant="negative">Geschlossen</Badge>}
         <CommunityTrustBadge status={community?.status} />
       </div>
-
-      {detour && (
-        <DetourBadge
-          detourKm={detour.detourKm}
-          detourMin={detour.detourMin}
-          savings={Number.isFinite(detour.score) ? detour.score : undefined}
-        />
-      )}
 
       <TrendHint trend={trend} />
 
