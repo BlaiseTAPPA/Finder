@@ -1,6 +1,13 @@
 import { fetchApi } from "./server-fn-client";
 import type {
+  BudgetInput,
+  FuelBudget,
+  FuelBudgetData,
+  FuelLogInput,
+  FuelLogUpdateInput,
   PriceAlert,
+  VehicleInput,
+  VehicleProfile,
   SaveTripInput,
   SetFavoriteInput,
   SyncInput,
@@ -60,4 +67,30 @@ export async function toggleAlert(args: { data: ToggleAlertInput }): Promise<{ o
 
 export async function removeAlert(args: { data: { id: string } }): Promise<{ ok: true }> {
   return fetchApi<{ ok: true }>("/api/account/remove-alert", args.data);
+}
+
+// ----- Tankbudget (Feature 0002) -----
+
+export async function getFuelBudget(args: { data: { since: string } }): Promise<FuelBudgetData> {
+  return fetchApi<FuelBudgetData>("/api/account/fuel-budget", args.data);
+}
+
+export async function saveVehicle(args: { data: VehicleInput }): Promise<VehicleProfile> {
+  return fetchApi<VehicleProfile>("/api/account/vehicle", args.data);
+}
+
+export async function saveBudget(args: { data: BudgetInput }): Promise<FuelBudget> {
+  return fetchApi<FuelBudget>("/api/account/budget", args.data);
+}
+
+export async function addFuelLog(args: { data: FuelLogInput }): Promise<{ ok: true; id: string }> {
+  return fetchApi<{ ok: true; id: string }>("/api/account/fuel-log", args.data);
+}
+
+export async function updateFuelLog(args: { data: FuelLogUpdateInput }): Promise<{ ok: boolean }> {
+  return fetchApi<{ ok: boolean }>("/api/account/fuel-log/update", args.data);
+}
+
+export async function deleteFuelLog(args: { data: { id: string } }): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>("/api/account/fuel-log/delete", args.data);
 }

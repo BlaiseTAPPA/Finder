@@ -1,5 +1,5 @@
 /** Karte einer einzelnen Tankstelle mit Preisen, Status und Aktionen. */
-import { Flag, LineChart, Navigation, Star } from "lucide-react";
+import { Flag, Fuel, LineChart, Navigation, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -53,6 +53,8 @@ interface Props {
   community?: CardCommunity | undefined;
   /** Beschriftung der Entfernung ("Entfernung" bzw. "Abstand zur Route"). */
   distanceLabel?: string | undefined;
+  /** "Getankt" erfassen (Tankbudget); nur für angemeldete Nutzer gesetzt. */
+  onFillUp?: ((station: Station) => void) | undefined;
 }
 
 export function StationCard({
@@ -70,6 +72,7 @@ export function StationCard({
   detour,
   community,
   distanceLabel,
+  onFillUp,
 }: Props) {
   const price = station.prices[fuel];
   const others = FUEL_TYPES.filter((type) => type !== fuel);
@@ -177,6 +180,19 @@ export function StationCard({
             <Navigation className="size-4" />
             Route
           </Button>
+          {onFillUp && (
+            <Button
+              variant="ghost"
+              className={ghostAction}
+              onClick={(event) => {
+                event.stopPropagation();
+                onFillUp(station);
+              }}
+            >
+              <Fuel className="size-4" />
+              <span className="@max-sm:sr-only">Getankt</span>
+            </Button>
+          )}
           {onOpenTrend && (
             <Button
               variant="ghost"

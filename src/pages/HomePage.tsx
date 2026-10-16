@@ -5,7 +5,7 @@
 import { ClientOnly } from "@/components/ClientOnly";
 import { useServerFn } from "@/lib/server-fn-client";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   RefreshCw,
   Route as RouteIcon,
@@ -46,6 +46,10 @@ import { useTripFavorites } from "@/lib/route-favorites";
 import { useGeolocation } from "@/lib/geolocation";
 import { cheapestStationId, formatRelativeTime } from "@/lib/format";
 import { loadSearchSession, saveSearchSession } from "@/lib/search-session";
+import { useFuelBudget, useRefreshFuelBudget } from "@/lib/fuel-budget";
+import { summarizeBudget } from "@/lib/budget";
+import { BudgetStatus } from "@/components/budget-status";
+import { FillUpDialog } from "@/components/fill-up-dialog";
 import { geocodePlace, listStations, refreshPrices } from "@/lib/stations.functions";
 import { routeStations } from "@/lib/route.functions";
 import { getTrendSummaries, type TrendSummary } from "@/lib/trend.functions";
@@ -146,6 +150,28 @@ export function HomePage() {
 
   const geo = useGeolocation();
   const favorites = useFavorites();
+
+  // ----- Tankbudget (Feature 0002, nur angemeldet) -----
+  const fuelBudget = useFuelBudget();
+  const refreshFuelBudget = useRefreshFuelBudget();
+  const [fillUpStation, setFillUpStation] = useState<Station | null>(null);
+  const vehicle = fuelBudget.data?.vehicle ?? null;
+  const onFillUp = fuelBudget.enabled ? (station: Station) => setFillUpStation(station) : undefined;
+  const budgetSummary = useMemo(
+    () =>
+      fuelBudget.data?.budget
+        ? summarizeBudget(fuelBudget.data.budget, fuelBudget.data.logs, Date.now())
+        : null,
+    [fuelBudget.data],
+  );
+
+  // Kraftstoff des Fahrzeugs vorwählen – nur ohne wiederhergestellte Suche, und nur einmal.
+  const vehicleFuelApplied = useRef(false);
+  useEffect(() => {
+    if (vehicleFuelApplied.current || !vehicle) return;
+    vehicleFuelApplied.current = true;
+    if (!restored) setFuel(vehicle.fuelType);
+  }, [vehicle, restored]);
   const trips = useTripFavorites();
 
   const callList = useServerFn(listStations);
@@ -532,6 +558,15 @@ export function HomePage() {
                   {!center && !error && (
                     <>
                       <StartState />
+                      {budgetSummary && fuelBudget.data?.budget && (
+                        <div className="mt-6">
+                          <BudgetStatus
+                            summary={budgetSummary}
+                            period={fuelBudget.data.budget.period}
+                            variant="compact"
+                          />
+                        </div>
+                      )}
                       {favorites.hydrated && (
                         <StartOverview
                           favorites={favorites.favorites}
@@ -572,6 +607,7 @@ export function HomePage() {
                       onOpenTrend={setTrendStation}
                       community={communityProps}
                       communityStatuses={communityStatuses}
+                      onFillUp={onFillUp}
                     />
                   )}
                 </>
@@ -731,6 +767,7 @@ export function HomePage() {
                       onOpenTrend={setTrendStation}
                       community={communityProps}
                       communityStatuses={communityStatuses}
+                      onFillUp={onFillUp}
                       detours={detours}
                       distanceLabel="Abstand zur Route:"
                     />
@@ -796,6 +833,7 @@ export function HomePage() {
                 onOpenTrend={setTrendStation}
                 community={communityProps}
                 communityStatuses={communityStatuses}
+                onFillUp={onFillUp}
                 highlightCheapest={false}
                 layout="grid"
               />
@@ -820,6 +858,19 @@ export function HomePage() {
         }}
         onDone={() => void communityQuery.refetch()}
       />
+
+      {fuelBudget.enabled && (
+        <FillUpDialog
+          open={fillUpStation !== null}
+          onOpenChange={(open) => {
+            if (!open) setFillUpStation(null);
+          }}
+          station={fillUpStation}
+          entry={null}
+          defaultFuel={vehicle?.fuelType ?? fuel}
+          onSaved={() => void refreshFuelBudget()}
+        />
+      )}
 
       <PriceTrendChart
         station={trendStation}

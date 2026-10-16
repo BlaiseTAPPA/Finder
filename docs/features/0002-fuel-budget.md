@@ -2,7 +2,7 @@
 
 |            |                         |
 | ---------- | ----------------------- |
-| **Status** | Draft                   |
+| **Status** | In progress             |
 | **Branch** | `feat/0002-fuel-budget` |
 | **PR**     | —                       |
 

@@ -7,6 +7,8 @@ import { RootLayout } from "@/layouts/RootLayout";
 import { ProtectedLayout } from "@/layouts/ProtectedLayout";
 import { HomePage } from "@/pages/HomePage";
 import { AlertsPage } from "@/pages/AlertsPage";
+import { BudgetPage } from "@/pages/BudgetPage";
+import { VehicleOnboardingPage } from "@/pages/VehicleOnboardingPage";
 import { SignInPage } from "@/pages/SignInPage";
 import { SignUpPage } from "@/pages/SignUpPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -46,6 +48,8 @@ export function App() {
               <Route path="/sign-up" element={<SignUpPage />} />
               <Route element={<ProtectedLayout />}>
                 <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/budget" element={<BudgetPage />} />
+                <Route path="/fahrzeug" element={<VehicleOnboardingPage />} />
               </Route>
               <Route path="*" element={<NotFoundPage />} />
             </Route>

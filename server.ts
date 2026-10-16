@@ -25,6 +25,12 @@ import {
   idSchema,
   upsertAlertSchema,
   toggleAlertSchema,
+  vehicleSchema,
+  budgetSchema,
+  fuelLogSchema,
+  fuelLogUpdateSchema,
+  fuelBudgetQuerySchema,
+  uuidSchema,
 } from "./src/lib/account-input";
 import type { Station, SavedTrip } from "./src/types/station";
 
@@ -79,6 +85,12 @@ import {
   upsertAlert,
   setAlertActive,
   deleteAlert,
+  getFuelBudgetData,
+  upsertVehicle,
+  upsertBudget,
+  addFuelLog,
+  updateFuelLog,
+  deleteFuelLog,
 } from "./src/lib/account.server";
 
 const app = express();
@@ -601,6 +613,91 @@ app.post("/api/account/remove-alert", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Preisalarm konnte nicht gelöscht werden" });
   }
 });
+
+// -------------------------------------------------------------
+// FUEL BUDGET API (Feature 0002) — nur angemeldete Nutzer
+// -------------------------------------------------------------
+
+/**
+ * Gemeinsamer Rahmen der Budget-Routen: Clerk-Anmeldung prüfen, Eingabe validieren
+ * (ungültig → 400), Fehler protokollieren (→ 500 mit deutscher Meldung).
+ */
+function accountRoute(
+  name: string,
+  failure: string,
+  handler: (userId: string, body: unknown) => Promise<unknown>,
+) {
+  return async (req: Request, res: Response) => {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    try {
+      res.json(await handler(userId, req.body));
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "Ungültige Eingabe", issues: error.issues });
+        return;
+      }
+      console.error(`[account/${name}] Erreur :`, error);
+      res.status(500).json({ error: failure });
+    }
+  };
+}
+
+app.post(
+  "/api/account/fuel-budget",
+  accountRoute("fuel-budget", "Budgetdaten konnten nicht geladen werden", (userId, body) =>
+    getFuelBudgetData(userId, fuelBudgetQuerySchema.parse(body).since),
+  ),
+);
+
+app.post(
+  "/api/account/vehicle",
+  accountRoute("vehicle", "Fahrzeug konnte nicht gespeichert werden", (userId, body) =>
+    upsertVehicle(userId, vehicleSchema.parse(body)),
+  ),
+);
+
+app.post(
+  "/api/account/budget",
+  accountRoute("budget", "Budget konnte nicht gespeichert werden", (userId, body) =>
+    upsertBudget(userId, budgetSchema.parse(body)),
+  ),
+);
+
+app.post(
+  "/api/account/fuel-log",
+  accountRoute("fuel-log", "Tankvorgang konnte nicht gespeichert werden", async (userId, body) => {
+    const id = await addFuelLog(userId, fuelLogSchema.parse(body));
+    return { ok: true, id };
+  }),
+);
+
+app.post(
+  "/api/account/fuel-log/update",
+  accountRoute(
+    "fuel-log/update",
+    "Tankvorgang konnte nicht geändert werden",
+    async (userId, body) => {
+      const { id, ...input } = fuelLogUpdateSchema.parse(body);
+      return { ok: await updateFuelLog(userId, id, input) };
+    },
+  ),
+);
+
+app.post(
+  "/api/account/fuel-log/delete",
+  accountRoute(
+    "fuel-log/delete",
+    "Tankvorgang konnte nicht gelöscht werden",
+    async (userId, body) => {
+      await deleteFuelLog(userId, uuidSchema.parse(body).id);
+      return { ok: true };
+    },
+  ),
+);
 
 // -------------------------------------------------------------
 // CRON API

@@ -38,6 +38,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      fuel_budgets: {
+        Row: {
+          amount_eur: number;
+          clerk_user_id: string;
+          period: string;
+          updated_at: string;
+        };
+        Insert: {
+          amount_eur: number;
+          clerk_user_id: string;
+          period: string;
+          updated_at?: string;
+        };
+        Update: {
+          amount_eur?: number;
+          clerk_user_id?: string;
+          period?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      fuel_logs: {
+        Row: {
+          clerk_user_id: string;
+          created_at: string;
+          filled_at: string;
+          fuel_type: Database["public"]["Enums"]["fuel_type"];
+          id: string;
+          liters: number;
+          price_per_liter: number;
+          station_brand: string | null;
+          station_id: string | null;
+          station_name: string | null;
+          station_place: string | null;
+        };
+        Insert: {
+          clerk_user_id: string;
+          created_at?: string;
+          filled_at: string;
+          fuel_type: Database["public"]["Enums"]["fuel_type"];
+          id?: string;
+          liters: number;
+          price_per_liter: number;
+          station_brand?: string | null;
+          station_id?: string | null;
+          station_name?: string | null;
+          station_place?: string | null;
+        };
+        Update: {
+          clerk_user_id?: string;
+          created_at?: string;
+          filled_at?: string;
+          fuel_type?: Database["public"]["Enums"]["fuel_type"];
+          id?: string;
+          liters?: number;
+          price_per_liter?: number;
+          station_brand?: string | null;
+          station_id?: string | null;
+          station_name?: string | null;
+          station_place?: string | null;
+        };
+        Relationships: [];
+      };
       price_alerts: {
         Row: {
           active: boolean;
@@ -345,6 +408,36 @@ export type Database = {
           id?: string;
           name?: string;
           trip?: Json;
+        };
+        Relationships: [];
+      };
+      vehicle_profiles: {
+        Row: {
+          clerk_user_id: string;
+          consumption_l_per_100km: number;
+          created_at: string;
+          fuel_type: Database["public"]["Enums"]["fuel_type"];
+          name: string | null;
+          tank_capacity_l: number;
+          updated_at: string;
+        };
+        Insert: {
+          clerk_user_id: string;
+          consumption_l_per_100km: number;
+          created_at?: string;
+          fuel_type: Database["public"]["Enums"]["fuel_type"];
+          name?: string | null;
+          tank_capacity_l: number;
+          updated_at?: string;
+        };
+        Update: {
+          clerk_user_id?: string;
+          consumption_l_per_100km?: number;
+          created_at?: string;
+          fuel_type?: Database["public"]["Enums"]["fuel_type"];
+          name?: string | null;
+          tank_capacity_l?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };

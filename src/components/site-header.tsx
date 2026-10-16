@@ -1,6 +1,6 @@
 /** Kopfleiste: Marke, Konto und Menü-Sheet auf Mobile (Bereichs-Tabs liegen in der Seite). */
 import { useState } from "react";
-import { BellRing, LogIn, Menu, Route as RouteIcon, Star, Target } from "lucide-react";
+import { BellRing, LogIn, Wallet, Menu, Route as RouteIcon, Star, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import { useIsClerkEnabled } from "@/lib/auth";
@@ -42,6 +42,13 @@ export function SiteHeader({ tab, onTab, favoritesCount }: Props) {
         {isClerkEnabled && (
           <div className="flex items-center gap-1">
             <SignedIn>
+              <Link
+                to="/budget"
+                aria-label="Budget"
+                className="flex size-11 items-center justify-center rounded-full text-on-chrome/80 transition-colors hover:bg-on-chrome/10 hover:text-on-chrome md:pointer-fine:size-9"
+              >
+                <Wallet className="size-4" />
+              </Link>
               <Link
                 to="/alerts"
                 aria-label="Preisalarme"
